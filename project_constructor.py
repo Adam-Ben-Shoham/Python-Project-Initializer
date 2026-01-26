@@ -1,4 +1,6 @@
 import os,subprocess
+import platform
+
 
 class ProjectConstructor:
 
@@ -27,9 +29,12 @@ class ProjectConstructor:
         except PermissionError:
             raise RuntimeError(f'The virtual environment cannot be created. Permission denied at {path}')
 
-        activation_script_path = os.path.join(venv_path,'Scripts','activate')
+        if platform.system() == 'Windows':
+            activation_script_path = os.path.join(venv_path,'Scripts','activate')
+        else:
+            activation_script_path = os.path.join(venv_path,'bin','activate')
 
         if not os.path.exists(activation_script_path):
-            raise RuntimeError(f'Activation script missing, virtual environment may be corrupted.')
+            raise RuntimeError(f'Activation script missing in {venv_path}, virtual environment may be corrupted.')
 
         return venv_path

@@ -42,8 +42,9 @@ class ProjectOrchestrator:
 
     def create_project(self):
 
-        project_builder = ProjectConstructor()
-        project_builder.build_folder(self.final_path)
+        ProjectConstructor.build_folder(self.final_path)
+
+        ProjectConstructor.build_venv(self.py_interpreter,self.final_path)
 
 def clean_and_validate_project_name(name):
     chars_to_clean = '<>:"/\|?*'
