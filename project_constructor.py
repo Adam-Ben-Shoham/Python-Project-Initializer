@@ -65,17 +65,20 @@ class ProjectConstructor:
     def install_required_libs(venv_path,project_path):
 
         if platform.system() == 'Windows':
-            activation_script_path = os.path.join(venv_path, 'Scripts', 'activate')
+            pip_path = os.path.join(venv_path, 'Scripts', 'pip.exe')
         else:
-            activation_script_path = os.path.join(venv_path, 'bin', 'activate')
+            pip_path = os.path.join(venv_path, 'bin', 'pip')
 
         required_libs_file = os.path.join(project_path, 'requirements.txt')
 
         if not os.path.exists(required_libs_file) or os.path.getsize(required_libs_file) == 0:
             return
 
-        command = [activation_script_path,'install', '-r', required_libs_file]
+        install_command = [pip_path,'install', '-r', required_libs_file]
+        upgrade_pip_command = [pip_path, 'install', '--upgrade', 'pip']
         try:
-            subprocess.run(command, check=True, capture_output=True, text=True)
+            subprocess.run(upgrade_pip_command,check=True, capture_output=True, text=True)
+
+            subprocess.run(install_command, check=True, capture_output=True, text=True)
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f'Required libraries installation failed. error:{e.stderr}')

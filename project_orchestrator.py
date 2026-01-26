@@ -4,7 +4,7 @@ import platform
 from project_constructor import ProjectConstructor
 
 
-# project_name,root_dir,ide_choice,py_interpreter,ide_path,init_git,project_type
+# project_name,root_dir,ide_choice,py_interpreter,ide_path,init_git,project_type,install_libs
 class ProjectOrchestrator:
     def __init__(self, input_dict):
         self._clean_inputs(input_dict)
@@ -43,6 +43,8 @@ class ProjectOrchestrator:
 
         self.project_type = input_dict['project_type']
 
+        self.install_libs = input_dict['install_libs']
+
     def create_project(self):
 
         ProjectConstructor.build_folder(self.final_path)
@@ -53,7 +55,7 @@ class ProjectOrchestrator:
 
         template = PROJECT_TEMPLATES.get(self.project_type,PROJECT_TEMPLATES['Basic'])
         libraries = '\n'.join(template['libraries'])
-        ProjectConstructor.write_file(self.final_path,'requirements.txt',libraries)
+        ProjectConstructor.write_file('requirements.txt',self.final_path,libraries)
 
         gitignore_content = self.generate_gitignore()
 
@@ -62,8 +64,8 @@ class ProjectOrchestrator:
         main_content = template['content']
         ProjectConstructor.write_file('main.py',self.final_path,main_content)
 
-        if libraries:
-            ProjectConstructor.install_required_libs(venv_path, libraries)
+        if self.install_libs and libraries:
+            ProjectConstructor.install_required_libs(venv_path, self.final_path)
 
         if self.init_git:
             ProjectConstructor.create_local_git_repo(self.final_path)
