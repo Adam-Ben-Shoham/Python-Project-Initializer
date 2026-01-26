@@ -1,23 +1,46 @@
 import os
 
+
 # project_name,root_dir,ide_choice,py_interpreter,ide_path,init_git,project_type
 class ProjectOrchestrator:
-    def __init__(self,input_dict):
+    def __init__(self, input_dict):
         self._clean_inputs(input_dict)
 
-    def _clean_inputs(self,input_dict):
-
+    def _clean_inputs(self, input_dict):
         ## clean and validate the project name chosen by the user
 
-        project_name = clean_and_validate_project_name(input_dict['project_name'])
+        self.project_name = clean_and_validate_project_name(input_dict['project_name'])
 
         ## clean and validate the root directory chosen by the user
 
-        root_dir = validate_directory(input_dict['root_dir'])
+        self.root_dir = validate_directory(input_dict['root_dir'])
 
+        ## check if the final path is valid and if it already exists
+        final_path = os.path.join(self.root_dir, self.project_name)
+
+        if len(final_path) > 260:
+            raise ValueError('The project final path cannot be longer than 260 characters.')
+
+        if os.path.exists(final_path):
+            raise ValueError('The project folder already exists.')
+
+        self.final_path = final_path
+
+        ## validate the executables
+
+        self.ide_path = validate_executable(input_dict['ide_path'])
+
+        self.py_interpreter = validate_executable(input_dict['py_interpreter'])
+
+        ## assign variables for the rest
+
+        self.ide_choice = input_dict['ide_choice']
+
+        self.init_git = input_dict['init_git']
+
+        self.project_type = input_dict['project_type']
 
 def clean_and_validate_project_name(name):
-
     chars_to_clean = '<>:"/\|?*'
     reserved_names = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1']
 
@@ -35,14 +58,12 @@ def clean_and_validate_project_name(name):
 
     return name
 
+
 def validate_directory(dir_input):
     dir_input = dir_input.strip()
 
     if not dir_input:
         raise ValueError('Directory path cannot be empty')
-
-    if len(dir_input) > 260:
-        raise ValueError('Directory path cannot contain more than 260 characters')
 
     dir_input = os.path.normpath(dir_input)
 
@@ -55,6 +76,9 @@ def validate_directory(dir_input):
         if not os.path.exists(drive + os.sep):
             raise ValueError(f'The directory {drive} does not exist or not connected to your computer')
 
+    if len(dir_input) > 260:
+        raise ValueError('Directory path cannot contain more than 260 characters')
+
     if not os.path.exists(dir_input):
         raise ValueError(f'Directory path does not exist: {dir_input}')
 
@@ -65,3 +89,22 @@ def validate_directory(dir_input):
         raise ValueError('Root directory is not writable')
 
     return dir_input
+
+
+def validate_executable(executable):
+    executable = executable.strip()
+
+    if not executable:
+        raise ValueError(f'The executable path cannot be empty')
+
+    executable = os.path.normpath(executable)
+
+    executable = os.path.abspath(executable)
+
+    if not os.path.isfile(executable):
+        raise ValueError(f'{executable} is not a file')
+
+    if not os.access(executable, os.X_OK):
+        raise ValueError(f'{executable} is not permitted for execution')
+
+    return executable
