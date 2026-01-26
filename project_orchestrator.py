@@ -1,5 +1,5 @@
 import os
-
+from project_constructor import ProjectConstructor
 
 # project_name,root_dir,ide_choice,py_interpreter,ide_path,init_git,project_type
 class ProjectOrchestrator:
@@ -39,6 +39,11 @@ class ProjectOrchestrator:
         self.init_git = input_dict['init_git']
 
         self.project_type = input_dict['project_type']
+
+    def create_project(self):
+
+        project_builder = ProjectConstructor()
+        project_builder.build_folder(self.final_path)
 
 def clean_and_validate_project_name(name):
     chars_to_clean = '<>:"/\|?*'
