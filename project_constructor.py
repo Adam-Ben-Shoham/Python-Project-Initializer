@@ -65,17 +65,17 @@ class ProjectConstructor:
     def install_required_libs(venv_path,project_path):
 
         if platform.system() == 'Windows':
-            pip_path = os.path.join(venv_path, 'Scripts', 'pip.exe')
+            python_venv_exe = os.path.join(venv_path, 'Scripts', 'python.exe')
         else:
-            pip_path = os.path.join(venv_path, 'bin', 'pip')
+            python_venv_exe = os.path.join(venv_path, 'bin', 'python   ')
 
         required_libs_file = os.path.join(project_path, 'requirements.txt')
 
         if not os.path.exists(required_libs_file) or os.path.getsize(required_libs_file) == 0:
             return
 
-        install_command = [pip_path,'install', '-r', required_libs_file]
-        upgrade_pip_command = [pip_path, 'install', '--upgrade', 'pip']
+        upgrade_pip_command = [python_venv_exe, '-m', 'pip', 'install', '--upgrade', 'pip']
+        install_command = [python_venv_exe, '-m', 'pip', 'install', '-r', required_libs_file]
         try:
             subprocess.run(upgrade_pip_command,check=True, capture_output=True, text=True)
 

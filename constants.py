@@ -53,7 +53,7 @@ htmlcov/
     'windows': """# --- Windows OS ---
 Bin/
 obj/
-Generated\ Files/
+Generated\\ Files/
 [Bb]in/
 [Oo]bj/
 # Windows image thumbnails
