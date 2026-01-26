@@ -40,5 +40,26 @@ class ProjectConstructor:
         return venv_path
 
     @staticmethod
-    def write_file():
-        pass
+    def write_file(file_name,file_path,content):
+        complete_path = os.path.join(file_path,file_name)
+
+        try:
+            with open(complete_path,'w',encoding='utf-8') as f:
+                f.write(content)
+        except Exception as e:
+            raise RuntimeError(f'Unable to create {file_name} at {file_path} due to an error: {e}')
+
+    @staticmethod
+    def create_local_git_repo(path):
+
+        command = ['git','init']
+
+        try:
+            subprocess.run(command,cwd=path,check=True,capture_output=True,text=True)
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f'Git repo not initialized. Git may not be installed. error:{e.stderr}')
+        except FileNotFoundError:
+            raise RuntimeError(f'Git command not found. Make sure you have git installed in {path}')
+
+
+
