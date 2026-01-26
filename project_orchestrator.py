@@ -1,5 +1,8 @@
 import os
+import platform
+
 from project_constructor import ProjectConstructor
+
 
 # project_name,root_dir,ide_choice,py_interpreter,ide_path,init_git,project_type
 class ProjectOrchestrator:
@@ -44,7 +47,34 @@ class ProjectOrchestrator:
 
         ProjectConstructor.build_folder(self.final_path)
 
-        ProjectConstructor.build_venv(self.py_interpreter,self.final_path)
+        ProjectConstructor.build_venv(self.py_interpreter, self.final_path)
+
+    def generate_gitignore(self):
+        from constants import IGNORE_DICT
+
+        gitignore_file = [IGNORE_DICT.get('python','## Python block missing ##')]
+
+        current_os = platform.system().lower()
+
+        os_map = {
+            'windows': 'windows',
+            'darwin': 'macos',
+            'linux': 'linux'
+        }
+
+        selected_os = os_map.get(current_os, None)
+
+        if selected_os:
+            gitignore_file.append(IGNORE_DICT.get(selected_os, f'## {selected_os} block missing ##'))
+
+        if self.ide_choice == 'PyCharm':
+            gitignore_file.append(IGNORE_DICT.get('pycharm','## PyCharm block missing ##'))
+        elif self.ide_choice == 'VS Code':
+            gitignore_file.append(IGNORE_DICT.get('vscode','## VS-Code block missing ##'))
+
+        return '\n\n'.join(gitignore_file)
+
+
 
 def clean_and_validate_project_name(name):
     chars_to_clean = '<>:"/\|?*'

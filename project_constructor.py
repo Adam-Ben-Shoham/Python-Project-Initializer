@@ -38,3 +38,7 @@ class ProjectConstructor:
             raise RuntimeError(f'Activation script missing in {venv_path}, virtual environment may be corrupted.')
 
         return venv_path
+
+    @staticmethod
+    def write_file():
+        pass
