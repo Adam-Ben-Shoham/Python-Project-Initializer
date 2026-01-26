@@ -89,3 +89,79 @@ out/
 *.code-workspace
 """
 }
+
+PROJECT_TEMPLATES = {
+    'Basic': {
+        'content': "\n\nif __name__ == \'__main__\':\n",
+        'libraries': []
+    },
+    'Automation': {
+        'content': """import requests
+import os
+from dotenv import load_dotenv
+
+def main():
+    pass
+
+if __name__ == "__main__":
+    main()
+""",
+        'libraries': ['requests', 'python-dotenv']
+    },
+    'Flask': {
+        'content': """from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "<h1>Hello, Flask!</h1><p>Welcome to your new web app.</p>"
+
+if __name__ == "__main__":
+    
+    app.run(debug=True)
+""",
+        'libraries': ['flask', 'gunicorn']
+    },
+    'FastAPI': {
+        'content': """from fastapi import FastAPI
+import uvicorn
+
+app = FastAPI()
+
+@app.get("/")
+async def root():
+    return {"message": "Hello from FastAPI"}
+
+if __name__ == "__main__":
+
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+""",
+        'libraries': ['fastapi', 'uvicorn', 'pydantic']
+    },
+    'Data Science': {
+        'content': """import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+def main():
+    pass
+
+if __name__ == "__main__":
+    main()
+""",
+        'libraries': ['pandas', 'numpy', 'matplotlib', 'seaborn']
+    },
+    'Web Scraping': {
+        'content': """import requests
+from bs4 import BeautifulSoup
+
+def main():
+    pass
+
+if __name__ == "__main__":
+    main()
+""",
+        'libraries': ['requests', 'beautifulsoup4', 'lxml']
+    }
+}

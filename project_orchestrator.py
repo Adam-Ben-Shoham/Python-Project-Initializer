@@ -47,13 +47,23 @@ class ProjectOrchestrator:
 
         ProjectConstructor.build_folder(self.final_path)
 
-        ProjectConstructor.build_venv(self.py_interpreter, self.final_path)
+        venv_path = ProjectConstructor.build_venv(self.py_interpreter, self.final_path)
+
+        from constants import PROJECT_TEMPLATES
+
+        template = PROJECT_TEMPLATES.get(self.project_type,PROJECT_TEMPLATES['Basic'])
+        libraries = '\n'.join(template['libraries'])
+        ProjectConstructor.write_file(self.final_path,'requirements.txt',libraries)
 
         gitignore_content = self.generate_gitignore()
 
         ProjectConstructor.write_file('.gitignore', self.final_path, gitignore_content)
 
-        ProjectConstructor.write_file('main.py',self.final_path,'\n\nif __name__ == \'__main__\':\n')
+        main_content = template['content']
+        ProjectConstructor.write_file('main.py',self.final_path,main_content)
+
+        if libraries:
+            ProjectConstructor.install_required_libs(venv_path, libraries)
 
         if self.init_git:
             ProjectConstructor.create_local_git_repo(self.final_path)
