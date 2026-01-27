@@ -82,3 +82,11 @@ class ProjectConstructor:
             subprocess.run(install_command, check=True, capture_output=True, text=True)
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f'Required libraries installation failed. error:{e.stderr}')
+
+    @staticmethod
+    def launch_ide(ide_path, project_path):
+        command = [ide_path,project_path]
+        try:
+            subprocess.Popen(command,creationflags=subprocess.CREATE_NEW_CONSOLE if platform.system()=='windows' else 0)
+        except Exception as e:
+            raise RuntimeError(f'Launching IDE failed: {e}')

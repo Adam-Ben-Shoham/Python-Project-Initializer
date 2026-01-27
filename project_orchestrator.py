@@ -70,6 +70,18 @@ class ProjectOrchestrator:
         if self.init_git:
             ProjectConstructor.create_local_git_repo(self.final_path)
 
+        if self.ide_choice == 'VS Code':
+            vscode_folder = os.path.join(self.final_path, '.vscode')
+
+            if not os.path.exists(vscode_folder):
+                os.makedirs(vscode_folder)
+
+            trust_json = '{\n    "security.workspace.trust.enabled": false\n}'
+
+            ProjectConstructor.write_file('.vscode', vscode_folder, trust_json)
+
+        ProjectConstructor.launch_ide(self.ide_path, self.final_path)
+
     def generate_gitignore(self):
         from constants import IGNORE_DICT
 
@@ -97,7 +109,7 @@ class ProjectOrchestrator:
 
 
 def clean_and_validate_project_name(name):
-    chars_to_clean = '<>:"/\|?*'
+    chars_to_clean = r'<>:"/\|?*'
     reserved_names = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'LPT1']
 
     name = name.strip().replace(' ', '_')
