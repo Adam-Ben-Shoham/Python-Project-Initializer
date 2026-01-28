@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from tkinter import filedialog
 import threading
+import re
 
 from project_orchestrator import ProjectOrchestrator
 import constants
@@ -22,7 +23,9 @@ class AppGui(ctk.CTk):
         self.setup_header()
 
         self.name_input = None
-        self.remember = ctk.BooleanVar()
+        self.remember_root_dir = ctk.BooleanVar(value=False)
+        self.remember_ide = ctk.BooleanVar(value=False)
+        self.init_git = ctk.BooleanVar(value=True)
         self.setup_inputs()
 
     def setup_window(self):
@@ -50,10 +53,45 @@ class AppGui(ctk.CTk):
         self.setup_project_type_input()
 
     def setup_name_input(self):
+
+        self.name_var = ctk.StringVar()
+        self.name_var.trace_add('write',self.on_name_change)
+
         self.name_input = ctk.CTkEntry(self, placeholder_text='Project Name...',
                                        height=35,
                                        border_color=MAIN_THEME_PURPLE)
         self.name_input.grid(column=0, row=2, sticky='NSEW', padx=50, pady=(30, 10))
+
+        self.name_error = ctk.CTkLabel(self, text='skibidv',
+                                       text_color='red',
+                                       font=('Helvetica', 11),)
+        self.name_error.grid(column=0, row=3, sticky='w', padx=55, pady=(2, 0))
+
+
+    def on_name_change(self,*args):
+
+        text = self.name_var.get()
+        if text == '':
+            self.name_error.config(text='')
+            return
+
+        if len(text) > 30:
+            self.name_error.config(text='project name cant be longer than 30 characters')
+            return
+
+        if text[0].isdigit():
+            self.name_error.config(text='First character of project cant be a number')
+            return
+
+        for char in text:
+            if not char.isalnum() or char == '_':
+                self.name_error.config(text='Only use letters, numbers and underscores')
+                return
+
+        self.show_name_error('')
+
+
+
 
     def setup_root_dir_input(self):
         self.frame = ctk.CTkFrame(self, fg_color='transparent',
@@ -73,14 +111,14 @@ class AppGui(ctk.CTk):
                                            hover_color=DEEP_PURPLE)
         self.browse_button.grid(row=0, column=1, padx=0, pady=0)
 
-        self.remeber_button = ctk.CTkCheckBox(self.frame, text='Remember This Directory',
+        self.remember_button = ctk.CTkCheckBox(self.frame, text='Remember This Directory',
                                               fg_color=MAIN_THEME_PURPLE,
                                               hover_color=DEEP_PURPLE,
-                                              variable=self.remember,
+                                              variable=self.remember_root_dir,
                                               checkbox_height=22,
                                               checkbox_width=22,
                                               font=('Helvetica', 12, 'bold'), )
-        self.remeber_button.grid(column=0, row=1, sticky='w', padx=0, pady=(10, 0), columnspan=2)
+        self.remember_button.grid(column=0, row=1, sticky='w', padx=0, pady=(10, 0), columnspan=2)
 
     def browse_dir(self):
         folder_path = filedialog.askdirectory()
