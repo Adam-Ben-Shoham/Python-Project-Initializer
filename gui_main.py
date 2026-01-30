@@ -1,13 +1,11 @@
 import customtkinter as ctk
 from tkinter import filedialog
 import threading
-import re
-
+from gui_components import ValidatedNameInput
 from project_orchestrator import ProjectOrchestrator
 import constants
 
 MAIN_THEME_PURPLE = '#8A2BE2'
-MAIN_THEME_CYAN = '#008000'
 DEEP_PURPLE = '#6A0DAD'
 BLACK = '#2b2b2b'
 
@@ -17,16 +15,15 @@ class AppGui(ctk.CTk):
         super().__init__()
 
         self.setup_window()
-
-        self.project_title = None
-        self.subheader = None
         self.setup_header()
 
-        self.name_input = None
+        # variables
         self.remember_root_dir = ctk.BooleanVar(value=False)
         self.remember_ide = ctk.BooleanVar(value=False)
         self.init_git = ctk.BooleanVar(value=True)
+
         self.setup_inputs()
+
 
     def setup_window(self):
         self.title = 'Python Project Initializer'
@@ -48,24 +45,15 @@ class AppGui(ctk.CTk):
         self.subheader.grid(column=0, row=1, sticky='NSEW', padx=10)
 
     def setup_inputs(self):
-        self.setup_name_input()
+        # self.setup_name_input()
         self.setup_root_dir_input()
+        self.setup_name_input()
         self.setup_project_type_input()
 
     def setup_name_input(self):
 
-        self.name_var = ctk.StringVar()
-        self.name_var.trace_add('write',self.on_name_change)
-
-        self.name_input = ctk.CTkEntry(self, placeholder_text='Project Name...',
-                                       height=35,
-                                       border_color=MAIN_THEME_PURPLE)
-        self.name_input.grid(column=0, row=2, sticky='NSEW', padx=50, pady=(30, 10))
-
-        self.name_error = ctk.CTkLabel(self, text='skibidv',
-                                       text_color='red',
-                                       font=('Helvetica', 11),)
-        self.name_error.grid(column=0, row=3, sticky='w', padx=55, pady=(2, 0))
+        self.name_section = ValidatedNameInput(self, theme_color=MAIN_THEME_PURPLE)
+        self.name_section.grid(row=3, column=0, sticky='ew', padx=50, pady=(10, 0))
 
 
     def on_name_change(self,*args):
@@ -90,14 +78,11 @@ class AppGui(ctk.CTk):
 
         self.show_name_error('')
 
-
-
-
     def setup_root_dir_input(self):
         self.frame = ctk.CTkFrame(self, fg_color='transparent',
                                   bg_color='transparent')
         self.frame.grid_columnconfigure(0, weight=1)
-        self.frame.grid(row=3, column=0, sticky='ew', padx=50, pady=10)
+        self.frame.grid(row=2, column=0,sticky='ew',padx=50,pady=(30,0))
 
         self.root_dir_input = ctk.CTkEntry(self.frame, placeholder_text='Project Root Directory...',
                                            height=35,

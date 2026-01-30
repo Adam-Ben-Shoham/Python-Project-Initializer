@@ -4,7 +4,7 @@ import os
 # 1. Setup your test data
 # Make sure these paths are correct for YOUR computer!
 test_input = {
-    'project_name': 'My',
+    'project_name': 'Meitar',
     'root_dir': r"C:\Users\mada2\Desktop",  # Use an 'r' before the string for Windows paths
     'ide_choice': 'PyCharm',
     'py_interpreter': r'C:\Users\mada2\AppData\Local\Programs\Python\Python312\python.exe',  # Path to your global python.exe
