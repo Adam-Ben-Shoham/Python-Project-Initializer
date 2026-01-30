@@ -50,3 +50,20 @@ class InputValidator:
 
         return 'valid',''
 
+    @staticmethod
+    def validate_root_dir(path_var):
+        if not path_var or path_var == 'Root Directory...':
+            return 'valid',''
+
+        if not os.path.exists(path_var):
+            return 'warning','Path does not exist'
+
+        if not os.path.isdir(path_var):
+            return 'invalid','Path is not a directory'
+
+        if not os.access(path_var, os.W_OK):
+            return 'invalid','No writing permission for this directory'
+
+        return 'valid',''
+
+
