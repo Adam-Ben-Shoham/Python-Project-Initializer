@@ -6,8 +6,10 @@ from gui_settings import SettingsManager
 
 
 class ValidatedNameInput(ctk.CTkFrame):
-    def __init__(self, master, theme_color, dir_selector=None, init_button=None, **kwargs):
+    def __init__(self, master, theme_color, init_error_label, dir_selector=None, init_button=None, **kwargs):
         super().__init__(master, fg_color='transparent', **kwargs)
+        self.name_status = None
+        self.init_error_label = init_error_label
         self.theme_color = theme_color
         self.dir_selector = dir_selector
         self.init_button = init_button
@@ -46,9 +48,14 @@ class ValidatedNameInput(ctk.CTkFrame):
 
     def on_change(self, *args):
 
-        self.init_button.configure(text=f'Initialize {self.name_var.get()}')
+        if self.name_var.get() != 'Project Name...':
+            self.init_button.configure(text=f'Initialize {self.name_var.get()}')
+        else:
+            self.init_button.configure(text='Initialize')
+
         root_dir = self.dir_selector.get()
         status, error_message = InputValidator.validate_project_name(self.name_var.get(), root_dir)
+        self.name_status = status
 
         validate_variable(variable=self.name_var.get(),
                           placeholder=self.placeholder,
@@ -62,14 +69,20 @@ class ValidatedNameInput(ctk.CTkFrame):
             self.error_label.grid(row=1, column=0, sticky='w')
         else:
             self.error_label.grid_forget()
+            self.init_error_label.grid_forget()
 
     def get(self):
         return self.name_var.get()
 
 
 class PathSelector(ctk.CTkFrame):
-    def __init__(self, master, theme_color, hover_color,placeholder_name,ide_choice = None, **kwargs):
+    def __init__(self, master, theme_color, hover_color,placeholder_name,init_error_label,ide_choice = None, **kwargs):
         super().__init__(master, fg_color='transparent', **kwargs)
+        self.ide_status = None
+        self.root_dir_status = None
+        self.init_error_label = init_error_label
+
+
         self.theme_color = theme_color
 
         self.grid_columnconfigure(0, weight=1)
@@ -133,8 +146,10 @@ class PathSelector(ctk.CTkFrame):
 
         if self.ide_choice:
             status,error_message = InputValidator.validate_ide_path(self.path_var.get(), self.ide_choice)
+            self.ide_status = status
         else:
             status, error_message = InputValidator.validate_directory(self.path_var.get())
+            self.root_dir_status = status
 
         validate_variable(variable=self.path_var.get(),
                           placeholder=self.placeholder,
@@ -152,6 +167,7 @@ class PathSelector(ctk.CTkFrame):
         else:
             self.error_label.grid_forget()
             self.remember_button.grid(column=0, row=1, sticky='w', padx=0, pady=(10, 0), columnspan=2)
+            self.init_error_label.grid_forget()
 
 class ChoiceSelector(ctk.CTkFrame):
     def __init__(self, master,values, theme_color, hover_color, remember_btn_color,text,has_remember=False,remember_var=None,**kwargs):
@@ -186,7 +202,7 @@ class ChoiceSelector(ctk.CTkFrame):
         if has_remember:
             self.remember_btn_color = remember_btn_color
             self.remember_button = CheckBoxButton(self,theme_color=self.remember_btn_color,
-                                                  hover_color=hover_color,
+                                                  hover_color=remember_btn_color,
                                                   remember_var=self.remember_var,
                                                   text=self.text,
                                                   )

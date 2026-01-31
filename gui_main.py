@@ -1,14 +1,14 @@
 import customtkinter as ctk
 from tkinter import filedialog
 import threading
-from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector
+from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector, CheckBoxButton
 from project_orchestrator import ProjectOrchestrator
 import constants
+from gui_settings import SettingsManager
 
 MAIN_THEME_PURPLE = '#8A2BE2'
 DEEP_PURPLE = '#6A0DAD'
 BLACK = '#2b2b2b'
-ORANGE = '#E6501B'
 GREEN = '#1F7D53'
 BLUE = '#1C4D8D'
 
@@ -19,18 +19,19 @@ class AppGui(ctk.CTk):
 
         self.setup_window()
         self.setup_header()
-        self.setup_initialize_button()
 
-        # variables
-        self.remember_root_dir = ctk.BooleanVar(value=False)
-        self.remember_ide = ctk.BooleanVar(value=False)
+        self.settings_manager = SettingsManager()
+        self.saved_settings = self.settings_manager.load_settings()
+
+        self.remember_root_dir = ctk.BooleanVar(value=self.saved_settings.get("remember_root_dir", False))
+        self.remember_ide = ctk.BooleanVar(value=self.saved_settings.get("remember_ide_choice", False))
         self.init_git = ctk.BooleanVar(value=True)
 
         self.setup_inputs()
 
     def setup_window(self):
         self.title('Python KickStarter')
-        self.geometry('600x700')
+        self.geometry('600x750')
         self.grid_columnconfigure(0, weight=1)
 
         ctk.set_appearance_mode('dark')
@@ -48,24 +49,29 @@ class AppGui(ctk.CTk):
         self.subheader.grid(column=0, row=1, sticky='NSEW', padx=10)
 
     def setup_inputs(self):
+
+        self.setup_initialize_button()
         self.setup_root_dir_input()
         self.setup_name_input()
         self.setup_project_type_input()
         self.setup_ide_choice_input()
         self.setup_ide_path_input()
+        self.setup_init_git_button()
 
     def setup_name_input(self):
         self.name_section = ValidatedNameInput(self, theme_color=MAIN_THEME_PURPLE,
                                                dir_selector=self.root_dir_selector,
-                                               init_button=self.init_button)
+                                               init_button=self.init_button,
+                                               init_error_label=self.init_error_label)
         self.name_section.grid(row=3, column=0, sticky='ew', padx=50, pady=(0, 10))
 
     def setup_root_dir_input(self):
         self.root_dir_selector = PathSelector(self,
-                                                   theme_color=MAIN_THEME_PURPLE,
-                                                   hover_color=DEEP_PURPLE,
-                                                   placeholder_name='Root Directory...',)
-        self.root_dir_selector.grid(row=2, column=0, sticky='ew', padx=50, pady=(40,20))
+                                              theme_color=MAIN_THEME_PURPLE,
+                                              hover_color=DEEP_PURPLE,
+                                              placeholder_name='Root Directory...',
+                                              init_error_label=self.init_error_label)
+        self.root_dir_selector.grid(row=2, column=0, sticky='ew', padx=50, pady=(40, 20))
 
     def setup_project_type_input(self):
         types = list(constants.PROJECT_TEMPLATES.keys())
@@ -73,8 +79,8 @@ class AppGui(ctk.CTk):
         self.project_type_selector = ChoiceSelector(self, theme_color=BLUE,
                                                     values=types,
                                                     remember_btn_color=MAIN_THEME_PURPLE,
-                                                    hover_color=BLACK,
-                                                    text='Project Type'
+                                                    hover_color=BLUE,
+                                                    text='Project Type:'
                                                     )
 
         self.project_type_selector.grid(row=4, column=0, sticky='ew', padx=50, pady=(0, 10))
@@ -83,7 +89,7 @@ class AppGui(ctk.CTk):
         ide_choices = ['PyCharm', 'VSCode']
         remember_ide = ctk.BooleanVar(value=False)
         self.ide_choice_selector = ChoiceSelector(self, theme_color=GREEN,
-                                                  hover_color=BLACK,
+                                                  hover_color=GREEN,
                                                   remember_btn_color=MAIN_THEME_PURPLE,
                                                   text='Remember Ide',
                                                   values=ide_choices,
@@ -96,10 +102,20 @@ class AppGui(ctk.CTk):
     def setup_ide_path_input(self):
 
         self.ide_path_input = PathSelector(self, theme_color=MAIN_THEME_PURPLE,
-                                                hover_color=DEEP_PURPLE,
-                                                placeholder_name='Select IDE Path...',
-                                                ide_choice='VSCode',)
+                                           hover_color=DEEP_PURPLE,
+                                           placeholder_name='Select IDE Path...',
+                                           ide_choice='VSCode',
+                                           init_error_label=self.init_error_label)
         self.ide_path_input.grid(row=6, column=0, sticky='ew', padx=50, pady=(0, 10))
+
+    def setup_init_git_button(self):
+        self.remember_git = ctk.BooleanVar(value=True)
+        self.init_git_button = CheckBoxButton(self, text='Initialize Local Git Repository',
+                                              theme_color=MAIN_THEME_PURPLE,
+                                              hover_color=DEEP_PURPLE,
+                                              remember_var=self.remember_git,
+                                              )
+        self.init_git_button.grid(row=7, column=0, sticky='w', padx=50, pady=(0, 10))
 
     def setup_initialize_button(self):
         self.init_button = ctk.CTkButton(self, text="Initialize",
@@ -109,11 +125,30 @@ class AppGui(ctk.CTk):
                                          hover_color=DEEP_PURPLE,
                                          command=self.initialize
                                          )
-        self.init_button.grid(row=10, column=0, pady=40, padx=100, sticky='ew')
+        self.init_button.grid(row=8, column=0, pady=(40, 10), padx=100, sticky='ew')
+
+        self.init_error_label = ctk.CTkLabel(self, text_color='red',
+                                             font=('Helvetica', 11, 'bold'),
+                                             )
 
     def initialize(self):
         # check for errors
-        pass
+        if self.name_section.name_status == 'invalid':
+            self.init_error_label.configure(text='Invalid Name')
+            self.init_error_label.grid(row=9, column=0, sticky='ew', padx=50)
+            return
+
+        if self.root_dir_selector.root_dir_status == 'invalid':
+            self.init_error_label.configure(text='Invalid Root Directory')
+            self.init_error_label.grid(row=9, column=0, sticky='ew', padx=50)
+            return
+
+        if self.ide_path_input.ide_status == 'invalid':
+            self.init_error_label.configure(text='Invalid IDE .exe Path')
+            self.init_error_label.grid(row=9, column=0, sticky='ew', padx=50)
+            return
+
+        return
 
 
 gui = AppGui()
