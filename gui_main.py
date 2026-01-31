@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import filedialog
 import threading
-from gui_components import ValidatedNameInput, DirectorySelector
+from gui_components import ValidatedNameInput, DirectorySelector,ChoiceSelector
 from project_orchestrator import ProjectOrchestrator
 import constants
 
@@ -59,29 +59,16 @@ class AppGui(ctk.CTk):
         self.root_dir_selector.grid(row=2, column=0, sticky='ew', padx=50, pady=(10, 0))
 
     def setup_project_type_input(self):
-        self.type_row_frame = ctk.CTkFrame(self, fg_color='transparent')
-        self.type_row_frame.grid(row=4, column=0, sticky='w', padx=50, pady=0)
-
-        self.type_label = ctk.CTkLabel(self.type_row_frame, text='Project Type:',
-                                       font=('Helvetica', 12, 'bold'),
-                                       text_color='white')
-
-        self.type_label.grid(column=0, row=2, sticky='w', padx=(0, 5), pady=0)
 
         types = list(constants.PROJECT_TEMPLATES.keys())
 
-        self.type_input = ctk.CTkSegmentedButton(self.type_row_frame,
-                                                 values=types,
-                                                 selected_color=MAIN_THEME_PURPLE,
-                                                 selected_hover_color=DEEP_PURPLE,
-                                                 unselected_color=BLACK,
-                                                 unselected_hover_color="#333333",
-                                                 text_color="white",
-                                                 fg_color=BLACK,
-                                                 font=('Helvetica', 12, 'bold'),
-                                                 height=35)
-        self.type_input.set(types[0])
-        self.type_input.grid(row=2, column=1, sticky='w', pady=(10, 0))
+        self.project_type_selector = ChoiceSelector(self, theme_color=MAIN_THEME_PURPLE,
+                                               values=types,
+                                               hover_color=DEEP_PURPLE,
+                                               name_of_input='Project Type',
+                                               )
+
+        self.project_type_selector.grid(row=3, column=0, sticky='ew', padx=50, pady=0)
 
     def setup_initialize_button(self):
         self.init_button = ctk.CTkButton(self, text="Initialize",

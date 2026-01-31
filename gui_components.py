@@ -142,6 +142,44 @@ class DirectorySelector(ctk.CTkFrame):
             self.error_label.grid_forget()
             self.remember_button.grid(column=0, row=1, sticky='w', padx=0, pady=(10, 0), columnspan=2)
 
+class ChoiceSelector(ctk.CTkFrame):
+    def __init__(self, master,values, theme_color, hover_color,name_of_input,has_remember=False,remember_var=None,**kwargs):
+        super().__init__(master,fg_color='transparent', **kwargs)
+
+        self.values = values
+        self.theme_color = theme_color
+        self.hover_color = hover_color
+        self.name_of_input = name_of_input
+        self.has_remember = has_remember
+        self.remember_var = remember_var
+
+        self.type_label = ctk.CTkLabel(self, text=f'{name_of_input}:',
+                                       font=('Helvetica', 12, 'bold'),
+                                       text_color='white')
+
+        self.type_label.grid(column=0, row=0, sticky='w', padx=(0, 5), pady=0)
+
+        self.button = ctk.CTkSegmentedButton(self,
+                                                 values=self.values,
+                                                 selected_color=theme_color,
+                                                 selected_hover_color=hover_color,
+                                                 unselected_color='#2b2b2b',
+                                                 unselected_hover_color="#333333",
+                                                 text_color="white",
+                                                 fg_color='#2b2b2b',
+                                                 font=('Helvetica', 12, 'bold'),
+                                                 height=35)
+        self.button.grid(row=0, column=1, sticky='w', pady=(10, 0))
+        self.button.set(self.values[0])
+
+        if has_remember:
+            self.remember_button = RememberButton(self,theme_color=self.theme_color,
+                                                  hover_color=hover_color,
+                                                  remember_var=self.remember_var,
+                                                  name_of_input=self.name_of_input,
+                                                  )
+            self.remember_button.grid(column=0, row=1, sticky='w',columnspan=2, pady=(5,0))
+
 
 class InitButton(ctk.CTkFrame):
     def __init__(self, master, theme_color, **kwargs):
@@ -161,7 +199,7 @@ class RememberButton(ctk.CTkFrame):
                                                fg_color=theme_color,
                                                hover_color=hover_color,
                                                variable=remember_var,
-                                               checkbox_height=22,
-                                               checkbox_width=22,
+                                               checkbox_height=18,
+                                               checkbox_width=18,
                                                font=('Helvetica', 12, 'bold'))
         self.remember_button.pack(padx=0, pady=0)
