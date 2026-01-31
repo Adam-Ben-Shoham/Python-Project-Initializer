@@ -67,8 +67,8 @@ class ValidatedNameInput(ctk.CTkFrame):
         return self.name_var.get()
 
 
-class DirectorySelector(ctk.CTkFrame):
-    def __init__(self, master, theme_color, hover_color, **kwargs):
+class PathSelector(ctk.CTkFrame):
+    def __init__(self, master, theme_color, hover_color,placeholder_name,ide_choice = None, **kwargs):
         super().__init__(master, fg_color='transparent', **kwargs)
         self.theme_color = theme_color
 
@@ -76,11 +76,13 @@ class DirectorySelector(ctk.CTkFrame):
 
         self.path_var = ctk.StringVar()
 
-        self.placeholder = 'Root Directory...'
+        self.placeholder = placeholder_name
         self.placeholder_color = '#808080'
 
+        self.ide_choice = ide_choice
+
         self.root_dir_input = ctk.CTkEntry(self, textvariable=self.path_var,
-                                           placeholder_text='Project Root Directory...',
+                                           placeholder_text=self.placeholder,
                                            height=35,
                                            border_color=self.theme_color)
         self.root_dir_input.grid(row=0, column=0, sticky='ew', padx=(0, 10))
@@ -101,10 +103,10 @@ class DirectorySelector(ctk.CTkFrame):
         self.browse_button.grid(row=0, column=1, padx=0, pady=0)
 
         self.remember_dir = ctk.BooleanVar(value=False)
-        self.remember_button = RememberButton(self,theme_color=self.theme_color,
+        self.remember_button = CheckBoxButton(self,theme_color=self.theme_color,
                                               hover_color=hover_color,
                                               remember_var=self.remember_dir,
-                                              name_of_input='Directory')
+                                              text='Remember Path')
         self.remember_button.grid(column=0, row=1, sticky='w', padx=0, pady=(10, 0), columnspan=2)
 
         self.error_label = ctk.CTkLabel(self, text='', text_color='red',
@@ -113,8 +115,13 @@ class DirectorySelector(ctk.CTkFrame):
         self.path_var.trace_add('write', self.on_change)
 
     def browse_dir(self):
-        folder_path = filedialog.askdirectory()
-
+        if not self.ide_choice:
+            folder_path = filedialog.askdirectory()
+        else:
+            folder_path = filedialog.askopenfilename(
+                title="Select File",
+                filetypes=[("All files", "*.*")]
+            )
         if folder_path:
             self.root_dir_input.delete(0, 'end')
             self.root_dir_input.insert(0, folder_path)
@@ -123,7 +130,11 @@ class DirectorySelector(ctk.CTkFrame):
         return self.path_var.get()
 
     def on_change(self, *args):
-        status, error_message = InputValidator.validate_root_dir(self.path_var.get())
+
+        if self.ide_choice:
+            status,error_message = InputValidator.validate_ide_path(self.path_var.get(), self.ide_choice)
+        else:
+            status, error_message = InputValidator.validate_directory(self.path_var.get())
 
         validate_variable(variable=self.path_var.get(),
                           placeholder=self.placeholder,
@@ -143,40 +154,41 @@ class DirectorySelector(ctk.CTkFrame):
             self.remember_button.grid(column=0, row=1, sticky='w', padx=0, pady=(10, 0), columnspan=2)
 
 class ChoiceSelector(ctk.CTkFrame):
-    def __init__(self, master,values, theme_color, hover_color,name_of_input,has_remember=False,remember_var=None,**kwargs):
+    def __init__(self, master,values, theme_color, hover_color, remember_btn_color,text,has_remember=False,remember_var=None,**kwargs):
         super().__init__(master,fg_color='transparent', **kwargs)
 
         self.values = values
         self.theme_color = theme_color
         self.hover_color = hover_color
-        self.name_of_input = name_of_input
+        self.text = text
         self.has_remember = has_remember
         self.remember_var = remember_var
 
-        self.type_label = ctk.CTkLabel(self, text=f'{name_of_input}:',
+        self.type_label = ctk.CTkLabel(self, text=text,
                                        font=('Helvetica', 12, 'bold'),
                                        text_color='white')
 
-        self.type_label.grid(column=0, row=0, sticky='w', padx=(0, 5), pady=0)
+        self.type_label.grid(column=0, row=0, sticky='w', padx=(0, 20), pady=0)
 
         self.button = ctk.CTkSegmentedButton(self,
                                                  values=self.values,
                                                  selected_color=theme_color,
                                                  selected_hover_color=hover_color,
                                                  unselected_color='#2b2b2b',
-                                                 unselected_hover_color="#333333",
+                                                 unselected_hover_color=theme_color,
                                                  text_color="white",
                                                  fg_color='#2b2b2b',
                                                  font=('Helvetica', 12, 'bold'),
                                                  height=35)
+        self.button.set(values[0])
         self.button.grid(row=0, column=1, sticky='w', pady=(10, 0))
-        self.button.set(self.values[0])
 
         if has_remember:
-            self.remember_button = RememberButton(self,theme_color=self.theme_color,
+            self.remember_btn_color = remember_btn_color
+            self.remember_button = CheckBoxButton(self,theme_color=self.remember_btn_color,
                                                   hover_color=hover_color,
                                                   remember_var=self.remember_var,
-                                                  name_of_input=self.name_of_input,
+                                                  text=self.text,
                                                   )
             self.remember_button.grid(column=0, row=1, sticky='w',columnspan=2, pady=(5,0))
 
@@ -186,16 +198,16 @@ class InitButton(ctk.CTkFrame):
         super().__init__(master, **kwargs)
         self.theme_color = theme_color
 
-class RememberButton(ctk.CTkFrame):
-    def __init__(self, master, theme_color,hover_color,remember_var, name_of_input, **kwargs):
+class CheckBoxButton(ctk.CTkFrame):
+    def __init__(self, master, theme_color,hover_color,remember_var, text, **kwargs):
         super().__init__(master,fg_color='transparent', **kwargs)
 
         self.theme_color = theme_color
         self.hover_color = hover_color
         self.remember_var = remember_var
-        self.name_of_input = name_of_input
+        self.text = text
 
-        self.remember_button = ctk.CTkCheckBox(self, text=f'Remember {name_of_input}',
+        self.remember_button = ctk.CTkCheckBox(self, text=f'{text}',
                                                fg_color=theme_color,
                                                hover_color=hover_color,
                                                variable=remember_var,

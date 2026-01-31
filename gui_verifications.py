@@ -51,8 +51,8 @@ class InputValidator:
         return 'valid', ''
 
     @staticmethod
-    def validate_root_dir(path_var):
-        if not path_var or path_var == 'Root Directory...':
+    def validate_directory(path_var):
+        if not path_var or path_var == 'Root Directory...' or path_var=='Select IDE Path...':
             return 'valid', ''
 
         if not os.path.exists(path_var):
@@ -65,3 +65,29 @@ class InputValidator:
             return 'invalid', 'No writing permission for this directory'
 
         return 'valid', ''
+
+    @staticmethod
+    def validate_ide_path(path_var,ide_choice=None):
+
+        if not path_var or path_var == "Select IDE Path...":
+            return 'valid', ''
+
+        if not os.path.exists(path_var):
+            return 'warning', 'Path does not exist'
+
+        if not path_var.lower().endswith('.exe'):
+            return 'invalid', 'Path must point to an executable (extension: ".exe")'
+
+        file_name = os.path.basename(path_var)
+
+        if ide_choice=='PyCharm':
+            if 'pycharm' not in file_name:
+                return 'invalid', "Looks like this path doesn't point to a PyCharm executable"
+
+        elif ide_choice=='VSCode':
+            if 'code' not in file_name:
+                return 'invalid', "Looks like this path doesn't point to a VSCode executable"
+
+        return 'valid', ''
+
+
