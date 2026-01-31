@@ -7,7 +7,8 @@ test_input = {
     'project_name': 'Meitar',
     'root_dir': r"C:\Users\mada2\Desktop",  # Use an 'r' before the string for Windows paths
     'ide_choice': 'PyCharm',
-    'py_interpreter': r'C:\Users\mada2\AppData\Local\Programs\Python\Python312\python.exe',  # Path to your global python.exe
+    'py_interpreter': r'C:\Users\mada2\AppData\Local\Programs\Python\Python312\python.exe',
+    # Path to your global python.exe
     'ide_path': r'C:\Program Files\JetBrains\PyCharm 2025.2.3\bin\pycharm64.exe',
     'init_git': True,
     'project_type': 'Automation',

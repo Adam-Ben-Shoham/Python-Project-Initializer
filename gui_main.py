@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import filedialog
 import threading
-from gui_components import ValidatedNameInput,DirectorySelector
+from gui_components import ValidatedNameInput, DirectorySelector
 from project_orchestrator import ProjectOrchestrator
 import constants
 
@@ -16,6 +16,7 @@ class AppGui(ctk.CTk):
 
         self.setup_window()
         self.setup_header()
+        self.setup_initialize_button()
 
         # variables
         self.remember_root_dir = ctk.BooleanVar(value=False)
@@ -23,7 +24,6 @@ class AppGui(ctk.CTk):
         self.init_git = ctk.BooleanVar(value=True)
 
         self.setup_inputs()
-
 
     def setup_window(self):
         self.title = 'Python Project Initializer'
@@ -45,22 +45,18 @@ class AppGui(ctk.CTk):
         self.subheader.grid(column=0, row=1, sticky='NSEW', padx=10)
 
     def setup_inputs(self):
-
         self.setup_root_dir_input()
         self.setup_name_input()
         self.setup_project_type_input()
 
     def setup_name_input(self):
-
-        self.name_section = ValidatedNameInput(self, theme_color=MAIN_THEME_PURPLE,dir_selector=self.root_dir_selector)
+        self.name_section = ValidatedNameInput(self, theme_color=MAIN_THEME_PURPLE, dir_selector=self.root_dir_selector,
+                                               init_button=self.init_button)
         self.name_section.grid(row=3, column=0, sticky='ew', padx=50, pady=(10, 0))
 
-
     def setup_root_dir_input(self):
-
-        self.root_dir_selector = DirectorySelector(self, theme_color=MAIN_THEME_PURPLE,hover_color=DEEP_PURPLE)
-        self.root_dir_selector.grid(row=2,column=0, sticky='ew', padx=50, pady=(10, 0))
-
+        self.root_dir_selector = DirectorySelector(self, theme_color=MAIN_THEME_PURPLE, hover_color=DEEP_PURPLE)
+        self.root_dir_selector.grid(row=2, column=0, sticky='ew', padx=50, pady=(10, 0))
 
     def setup_project_type_input(self):
         self.type_row_frame = ctk.CTkFrame(self, fg_color='transparent')
@@ -82,10 +78,24 @@ class AppGui(ctk.CTk):
                                                  unselected_hover_color="#333333",
                                                  text_color="white",
                                                  fg_color=BLACK,
-                                                 font=('Helvetica', 11, 'bold'),
+                                                 font=('Helvetica', 12, 'bold'),
                                                  height=35)
         self.type_input.set(types[0])
-        self.type_input.grid(row=2, column=1, sticky='w',pady=(10,0))
+        self.type_input.grid(row=2, column=1, sticky='w', pady=(10, 0))
+
+    def setup_initialize_button(self):
+        self.init_button = ctk.CTkButton(self, text="Initialize",
+                                         height=50,
+                                         font=('Helvetica', 16, 'bold'),
+                                         fg_color=MAIN_THEME_PURPLE,
+                                         hover_color=DEEP_PURPLE,
+                                         command=self.initialize
+                                         )
+        self.init_button.grid(row=10, column=0, pady=40, padx=100, sticky='ew')
+
+    def initialize(self):
+        #check for errors
+        pass
 
 
 gui = AppGui()

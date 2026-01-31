@@ -3,13 +3,14 @@ def handle_focus_in(entry, string_var, placeholder, text_color='white'):
         entry.delete(0, 'end')
         entry.configure(text_color=text_color)
 
+
 def handle_focus_out(entry, string_var, placeholder, placeholder_color='#808080'):
     if string_var.get() == "":
         entry.insert(0, placeholder)
         entry.configure(text_color=placeholder_color)
 
-def validate_variable(variable,placeholder,entry,error_label,status,error_message,theme_color):
 
+def validate_variable(variable, placeholder, entry, error_label, status, error_message, theme_color):
     if variable == placeholder or variable == "":
         error_label.configure(text="")
         entry.configure(border_color=theme_color)
