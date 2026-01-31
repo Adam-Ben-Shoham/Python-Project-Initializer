@@ -11,7 +11,7 @@ class InputValidator:
     def validate_project_name(name, root_path=None):
 
         # allow an empty name
-        if name == '':
+        if name == '' or name == 'Project Name...':
             return 'valid', ''
 
         # red errors - invalid:
@@ -27,8 +27,12 @@ class InputValidator:
         if not re.match(r'^[a-zA-Z0-9_]*$', name):
             return 'invalid', 'Only use letters,numbers and underscores'
 
+
+        if not root_path or root_path=='' or root_path == 'Root Directory...':
+            pass
+
         # collision checks - invalid and warnings:
-        if root_path:
+        else:
             full_path = os.path.join(root_path, name)
             if os.path.exists(full_path):
                 return 'invalid', 'A folder with this name already exists inside the selected directory'
@@ -52,7 +56,7 @@ class InputValidator:
 
     @staticmethod
     def validate_directory(path_var):
-        if not path_var or path_var == 'Root Directory...' or path_var=='Select IDE Path...':
+        if not path_var or path_var == 'Root Directory...' or path_var == '':
             return 'valid', ''
 
         if not os.path.exists(path_var):
@@ -69,7 +73,7 @@ class InputValidator:
     @staticmethod
     def validate_ide_path(path_var,ide_choice=None):
 
-        if not path_var or path_var == "Select IDE Path...":
+        if not path_var or path_var == "Select IDE Path..." or path_var == '':
             return 'valid', ''
 
         if not os.path.exists(path_var):

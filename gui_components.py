@@ -58,7 +58,7 @@ class ValidatedNameInput(ctk.CTkFrame):
                           error_message=error_message,
                           theme_color=self.theme_color)
 
-        if status != 'valid':
+        if status != 'valid' and error_message.strip():
             self.error_label.grid(row=1, column=0, sticky='w')
         else:
             self.error_label.grid_forget()
