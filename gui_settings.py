@@ -14,7 +14,9 @@ class SettingsManager:
             "ide_choice": "None",
             "remember_ide_choice": False,
             "ide_path": "",
-            "remember_ide_path": False
+            "remember_ide_path": False,
+            "interpreter": "",
+            "remember_interpreter": False,
         }
 
         if os.path.exists(SETTINGS_FILE):
@@ -37,7 +39,10 @@ class SettingsManager:
             "remember_ide_choice": settings_dict.get("remember_ide_choice", False),
 
             "ide_path": settings_dict["ide_path"] if settings_dict.get("remember_ide_path") else "",
-            "remember_ide_path": settings_dict.get("remember_ide_path", False)
+            "remember_ide_path": settings_dict.get("remember_ide_path", False),
+
+            "interpreter": settings_dict["interpreter"] if settings_dict.get("remember_interpreter") else "",
+            "remember_interpreter": settings_dict.get("remember_interpreter", False)
         }
 
         with open(SETTINGS_FILE, "w") as f:

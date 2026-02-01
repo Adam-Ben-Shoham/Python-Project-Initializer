@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import threading
-from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector, CheckBoxButton
+from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector, CheckBoxButton,CustomWarningBox
 from project_orchestrator import ProjectOrchestrator
 import constants
 from gui_settings import SettingsManager
@@ -26,13 +26,14 @@ class AppGui(ctk.CTk):
         self.remember_root_dir = ctk.BooleanVar(value=self.saved_settings.get("remember_root_dir", False))
         self.remember_ide = ctk.BooleanVar(value=self.saved_settings.get("remember_ide_choice", False))
         self.remember_ide_path = ctk.BooleanVar(value=self.saved_settings.get("remember_ide_path", False))
+        self.remember_interpreter = ctk.BooleanVar(value=self.saved_settings.get("remember_interpreter", False))
         self.init_git = ctk.BooleanVar(value=True)
 
         self.setup_inputs()
 
     def setup_window(self):
         self.title('Python KickStarter')
-        self.geometry('600x750')
+        self.geometry('700x850')
         self.grid_columnconfigure(0, weight=1)
 
         ctk.set_appearance_mode('dark')
@@ -57,6 +58,7 @@ class AppGui(ctk.CTk):
         self.setup_project_type_input()
         self.setup_ide_choice_input()
         self.setup_ide_path_input()
+        self.setup_interpreter_path_input()
         self.setup_init_git_button()
 
     def setup_name_input(self):
@@ -81,7 +83,7 @@ class AppGui(ctk.CTk):
             self.root_dir_selector.path_var.set(saved_root_path)
             self.root_dir_selector.root_dir_input.configure(text_color='white')
 
-        self.root_dir_selector.grid(row=2, column=0, sticky='ew', padx=50, pady=(40, 20))
+        self.root_dir_selector.grid(row=2, column=0, sticky='ew', padx=50, pady=(20, 20))
 
     def setup_project_type_input(self):
         types = list(constants.PROJECT_TEMPLATES.keys())
@@ -136,6 +138,22 @@ class AppGui(ctk.CTk):
 
         self.ide_path_input.grid(row=6, column=0, sticky='ew', padx=50, pady=(0, 10))
 
+    def setup_interpreter_path_input(self):
+        saved_interpreter = self.saved_settings.get("interpreter", '')
+
+        self.interpreter_path_input = PathSelector(self, theme_color=MAIN_THEME_PURPLE,
+                                             hover_color=DEEP_PURPLE,
+                                             placeholder_name='Select Interpreter...',
+                                             init_error_label=self.init_error_label,
+                                             tip='Tip: In your IDE terminal, type "python where", look for python.exe at the end of the path',
+                                             remember_var=self.remember_interpreter,
+                                                   interpreter_choice=True)
+        if saved_interpreter:
+            self.interpreter_path_input.path_var.set(saved_interpreter)
+            self.interpreter_path_input.root_dir_input.configure(text_color='white')
+
+        self.interpreter_path_input.grid(row=7, column=0, sticky='ew', padx=50, pady=(0, 10))
+
 
 
     def setup_init_git_button(self):
@@ -145,7 +163,7 @@ class AppGui(ctk.CTk):
                                               hover_color=DEEP_PURPLE,
                                               remember_var=self.remember_git,
                                               )
-        self.init_git_button.grid(row=7, column=0, sticky='w', padx=50, pady=(0, 10))
+        self.init_git_button.grid(row=8, column=0, sticky='w', padx=50, pady=(0, 10))
 
     def setup_initialize_button(self):
         self.init_button = ctk.CTkButton(self, text="Launch",
@@ -155,7 +173,7 @@ class AppGui(ctk.CTk):
                                          hover_color=DEEP_PURPLE,
                                          command=self.initialize
                                          )
-        self.init_button.grid(row=8, column=0, pady=(40, 10), padx=100, sticky='ew')
+        self.init_button.grid(row=9, column=0, pady=(40, 10), padx=100, sticky='ew')
 
         self.init_error_label = ctk.CTkLabel(self, text_color='red',
                                              font=('Helvetica', 11, 'bold'),
@@ -166,31 +184,36 @@ class AppGui(ctk.CTk):
         current_name = self.name_section.name_var.get().strip()
         if current_name=='' or current_name==self.name_section.placeholder:
             self.init_error_label.configure(text='Project name cannot be blank')
-            self.init_error_label.grid(row=9, column=0, sticky='ew', padx=50)
+            self.init_error_label.grid(row=10, column=0, sticky='ew', padx=50)
             self.name_section.name_entry.configure(border_color='red')
             self.name_section.name_status= 'invalid'
             return
 
         if self.name_section.name_status == 'invalid':
             self.init_error_label.configure(text='Invalid Name')
-            self.init_error_label.grid(row=9, column=0, sticky='ew', padx=50)
+            self.init_error_label.grid(row=10, column=0, sticky='ew', padx=50)
             return
 
         if self.root_dir_selector.root_dir_status == 'invalid':
             self.init_error_label.configure(text='Invalid Root Directory')
-            self.init_error_label.grid(row=9, column=0, sticky='ew', padx=50)
+            self.init_error_label.grid(row=10, column=0, sticky='ew', padx=50)
             return
 
         if self.ide_path_input.ide_status == 'invalid':
             self.init_error_label.configure(text='Invalid IDE .exe Path')
-            self.init_error_label.grid(row=9, column=0, sticky='ew', padx=50)
+            self.init_error_label.grid(row=10, column=0, sticky='ew', padx=50)
             return
 
+        if self.interpreter_path_input.interpreter_status == 'invalid':
+            self.init_error_label.configure(text='Invalid Interpreter Input')
+            self.init_error_label.grid(row=10, column=0, sticky='ew', padx=50)
 
         if 'warning' in [self.name_section.name_status, self.root_dir_selector.root_dir_status, self.ide_path_input.ide_status]:
-            confirm = messagebox.askyesno("Just A Heads Up",
-                                          "Your project name doesn't follow standard Python conventions.\n\nDo you wish to proceed anyway?")
-            if not confirm:
+            pop = CustomWarningBox(self, "Heads Up",
+                                   "Project Name Not Up To Standard Python conventions. Proceed?",
+                                   MAIN_THEME_PURPLE, DEEP_PURPLE)
+            self.wait_window(pop)
+            if not pop.result:
                 return
 
         self.init_error_label.grid_forget()
@@ -203,14 +226,34 @@ class AppGui(ctk.CTk):
             "remember_ide_choice": self.remember_ide.get(),
 
             "ide_path": self.ide_path_input.get(),
-            "remember_ide_path": self.remember_ide_path.get()
+            "remember_ide_path": self.remember_ide_path.get(),
+
+            "interpreter": self.interpreter_path_input.get(),
+            "remember_interpreter": self.remember_interpreter.get()
         }
 
         self.settings_manager.save_settings(settings_to_save)
 
-        test = self.settings_manager.load_settings()
-        print(test)
-        return
+        user_input = {
+            'project_name': self.name_section.name_var.get(),
+            'root_dir': self.root_dir_selector.root_dir_input.get(),
+            'ide_choice': self.ide_choice_selector.button.get(),
+            'py_interpreter': self.interpreter_path_input.get(),
+            'ide_path': self.ide_path_input.get(),
+            'init_git': self.init_git.get(),
+            'project_type': self.project_type_selector.button.get(),
+            'install_libs': True
+        }
+
+        self.init_button.configure(state="disabled", text="Creating Project...")
+
+    def run_creation(self,user_input):
+
+        project_orchestrator = ProjectOrchestrator(user_input)
+
+        success,message = project_orchestrator.create_project()
+
+
 
 
 gui = AppGui()

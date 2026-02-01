@@ -59,6 +59,9 @@ class InputValidator:
         if not path_var or path_var == 'Root Directory...' or path_var == '':
             return 'valid', ''
 
+        if path_var.startswith('"') or path_var.endswith('"'):
+            return 'warning', 'Remove quotes from the start or end of the path'
+
         if not os.path.exists(path_var):
             return 'warning', 'Path does not exist'
 
@@ -71,9 +74,9 @@ class InputValidator:
         return 'valid', ''
 
     @staticmethod
-    def validate_ide_path(path_var,ide_choice=None):
+    def validate_executable_path(path_var,ide_choice=None,interpreter_choice=None):
 
-        if not path_var or path_var == "Select IDE Path..." or path_var == '':
+        if not path_var or path_var == "Select IDE Path..." or path_var== 'Select Interpreter' or path_var == '':
             return 'valid', ''
 
         if path_var.startswith('"') or path_var.endswith('"'):
@@ -82,21 +85,24 @@ class InputValidator:
         if not os.path.exists(path_var):
             return 'warning', 'Path does not exist'
 
-
-
         if not path_var.lower().endswith('.exe'):
             return 'invalid', 'Path must point to an executable (extension: ".exe")'
 
         file_name = os.path.basename(path_var)
 
-        if ide_choice=='PyCharm':
-            if 'pycharm' not in file_name:
-                return 'invalid', "Looks like this path doesn't point to a PyCharm executable"
+        if not interpreter_choice:
+            if ide_choice=='PyCharm':
+                if 'pycharm' not in file_name:
+                    return 'invalid', "Looks like this path doesn't point to a PyCharm executable"
 
-        elif ide_choice=='VSCode':
-            if 'code' not in file_name.lower():
-                return 'invalid', "Looks like this path doesn't point to a VSCode executable"
+            elif ide_choice=='VSCode':
+                if 'code' not in file_name.lower():
+                    return 'invalid', "Looks like this path doesn't point to a VSCode executable"
+        else:
+            if file_name != 'python.exe':
+                return 'invalid', "Looks like this path doesn't point to a Python interpreter executable"
 
         return 'valid', ''
+
 
 

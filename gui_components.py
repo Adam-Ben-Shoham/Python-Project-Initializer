@@ -77,12 +77,16 @@ class ValidatedNameInput(ctk.CTkFrame):
 
 class PathSelector(ctk.CTkFrame):
     def __init__(self, master, theme_color, hover_color, placeholder_name, init_error_label, ide_choice=None,
-                 remember_var=None,tip=None, **kwargs):
+                 remember_var=None,tip=None,interpreter_choice=None, **kwargs):
         super().__init__(master, fg_color='transparent', **kwargs)
         self.ide_status = None
         self.root_dir_status = None
+        self.interpreter_status = None
+
         self.tip = tip
         self.init_error_label = init_error_label
+        self.remember_var = remember_var
+        self.interpreter_choice = interpreter_choice
 
         self.theme_color = theme_color
 
@@ -116,7 +120,7 @@ class PathSelector(ctk.CTkFrame):
                                            hover_color=hover_color)
         self.browse_button.grid(row=0, column=1, padx=0, pady=0)
 
-        self.remember_dir = remember_var if remember_var else ctk.BooleanVar(value=False)
+        self.remember_dir = self.remember_var if self.remember_var else ctk.BooleanVar(value=False)
 
         self.remember_button = CheckBoxButton(self, theme_color=self.theme_color,
                                               hover_color=hover_color,
@@ -135,13 +139,13 @@ class PathSelector(ctk.CTkFrame):
         self.path_var.trace_add('write', self.on_change)
 
     def browse_dir(self):
-        if not self.ide_choice:
-            folder_path = filedialog.askdirectory()
-        else:
+        if self.ide_choice or self.interpreter_choice:
             folder_path = filedialog.askopenfilename(
                 title="Select File",
                 filetypes=[("All files", "*.*")]
             )
+        else:
+            folder_path = filedialog.askdirectory()
         if folder_path:
             self.root_dir_input.delete(0, 'end')
             self.root_dir_input.insert(0, folder_path)
@@ -151,8 +155,11 @@ class PathSelector(ctk.CTkFrame):
 
     def on_change(self, *args):
 
-        if self.ide_choice:
-            status, error_message = InputValidator.validate_ide_path(self.path_var.get(), self.ide_choice)
+        if self.interpreter_choice:
+            status,error_message = InputValidator.validate_executable_path(path_var=self.path_var.get(),interpreter_choice= self.interpreter_choice)
+            self.interpreter_status = status
+        elif self.ide_choice:
+            status, error_message = InputValidator.validate_executable_path(path_var= self.path_var.get(), ide_choice= self.ide_choice)
             self.ide_status = status
         else:
             status, error_message = InputValidator.validate_directory(self.path_var.get())
@@ -212,8 +219,7 @@ class ChoiceSelector(ctk.CTkFrame):
                                                 )
         start_val = initial_value if initial_value in self.values else self.values[0]
         self.after(10, lambda: self.button.set(start_val))
-        # Inside ChoiceSelector __init__
-        print(f"DEBUG: ChoiceSelector '{text}' received initial_value: '{initial_value}'")
+
         self.button.grid(row=0, column=1, sticky='w', pady=(10, 0))
 
         if has_remember:
@@ -249,3 +255,36 @@ class CheckBoxButton(ctk.CTkFrame):
                                                checkbox_width=18,
                                                font=('Helvetica', 12, 'bold'))
         self.remember_button.pack(padx=0, pady=0)
+
+class CustomWarningBox(ctk.CTkToplevel):
+    def __init__(self, master, title, message, theme_color, hover_color):
+        super().__init__(master)
+        self.title(title)
+        self.geometry("400x200")
+        self.result = False  # Track user choice
+
+        # Center the window
+        self.attributes("-topmost", True)
+        self.grid_columnconfigure(0, weight=1)
+
+        self.label = ctk.CTkLabel(self, text=message, font=('Helvetica', 12), wraplength=350)
+        self.label.pack(pady=30)
+
+        self.btn_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.btn_frame.pack(pady=10)
+
+        self.yes_btn = ctk.CTkButton(self.btn_frame, text="Proceed", fg_color=theme_color,
+                                     hover_color=hover_color, width=100, command=self.on_yes)
+        self.yes_btn.grid(row=0, column=0, padx=10)
+
+        self.no_btn = ctk.CTkButton(self.btn_frame, text="Cancel", fg_color="#444",
+                                    width=100, command=self.on_no)
+        self.no_btn.grid(row=0, column=1, padx=10)
+
+    def on_yes(self):
+        self.result = True
+        self.destroy()
+
+    def on_no(self):
+        self.result = False
+        self.destroy()
