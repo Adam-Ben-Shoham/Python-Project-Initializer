@@ -28,7 +28,7 @@ class ValidatedNameInput(ctk.CTkFrame):
 
         self.name_entry = ctk.CTkEntry(self, textvariable=self.name_var,
                                        height=35, border_color=theme_color,
-                                       validate='key', validatecommand=validate_command,)
+                                       validate='key', validatecommand=validate_command, )
 
         self.name_entry.grid(row=0, column=0, sticky='ew', pady=(0, 5))
 
@@ -40,7 +40,7 @@ class ValidatedNameInput(ctk.CTkFrame):
 
         self.name_var.trace_add('write', self.on_change)
 
-    def _validate_limit(self,new_text):
+    def _validate_limit(self, new_text):
         if new_text == self.placeholder:
             return True
 
@@ -76,12 +76,13 @@ class ValidatedNameInput(ctk.CTkFrame):
 
 
 class PathSelector(ctk.CTkFrame):
-    def __init__(self, master, theme_color, hover_color,placeholder_name,init_error_label,ide_choice = None, **kwargs):
+    def __init__(self, master, theme_color, hover_color, placeholder_name, init_error_label, ide_choice=None,
+                 remember_var=None,tip=None, **kwargs):
         super().__init__(master, fg_color='transparent', **kwargs)
         self.ide_status = None
         self.root_dir_status = None
+        self.tip = tip
         self.init_error_label = init_error_label
-
 
         self.theme_color = theme_color
 
@@ -115,15 +116,21 @@ class PathSelector(ctk.CTkFrame):
                                            hover_color=hover_color)
         self.browse_button.grid(row=0, column=1, padx=0, pady=0)
 
-        self.remember_dir = ctk.BooleanVar(value=False)
-        self.remember_button = CheckBoxButton(self,theme_color=self.theme_color,
+        self.remember_dir = remember_var if remember_var else ctk.BooleanVar(value=False)
+
+        self.remember_button = CheckBoxButton(self, theme_color=self.theme_color,
                                               hover_color=hover_color,
                                               remember_var=self.remember_dir,
                                               text='Remember Path')
-        self.remember_button.grid(column=0, row=1, sticky='w', padx=0, pady=(10, 0), columnspan=2)
+        self.remember_button.grid(column=0, row=2, sticky='w', padx=0, pady=(10, 0), columnspan=2)
+
+        if self.tip:
+            self.tip_label = ctk.CTkLabel(self, text=tip, text_color='white',
+                                        font=('helvetica', 11, 'bold'))
+            self.tip_label.grid(column=0, row=1, sticky='w')
 
         self.error_label = ctk.CTkLabel(self, text='', text_color='red',
-                                        font=('helvetica', 11, 'bold'))
+                                            font=('helvetica', 11, 'bold'))
 
         self.path_var.trace_add('write', self.on_change)
 
@@ -145,7 +152,7 @@ class PathSelector(ctk.CTkFrame):
     def on_change(self, *args):
 
         if self.ide_choice:
-            status,error_message = InputValidator.validate_ide_path(self.path_var.get(), self.ide_choice)
+            status, error_message = InputValidator.validate_ide_path(self.path_var.get(), self.ide_choice)
             self.ide_status = status
         else:
             status, error_message = InputValidator.validate_directory(self.path_var.get())
@@ -157,21 +164,25 @@ class PathSelector(ctk.CTkFrame):
                           error_label=self.error_label,
                           status=status,
                           error_message=error_message,
-                          theme_color=self.theme_color)
+                          theme_color=self.theme_color,
+                          )
 
         if status != 'valid':
 
-            self.remember_button.grid(column=0, row=2, sticky='w', padx=0, pady=(2, 0), columnspan=2)
-            self.error_label.grid(row=1, column=0, sticky='w', padx=5, pady=(0, 0))
+            self.remember_button.grid(column=0, row=3, sticky='w', padx=0, pady=(2, 0), columnspan=2)
+            self.error_label.grid(row=2, column=0, sticky='w', padx=5, pady=(0, 0))
 
         else:
+
             self.error_label.grid_forget()
-            self.remember_button.grid(column=0, row=1, sticky='w', padx=0, pady=(10, 0), columnspan=2)
+            self.remember_button.grid(column=0, row=2, sticky='w', padx=0, pady=(10, 0), columnspan=2)
             self.init_error_label.grid_forget()
 
+
 class ChoiceSelector(ctk.CTkFrame):
-    def __init__(self, master,values, theme_color, hover_color, remember_btn_color,text,has_remember=False,remember_var=None,**kwargs):
-        super().__init__(master,fg_color='transparent', **kwargs)
+    def __init__(self, master, values, theme_color, hover_color, remember_btn_color, text, initial_value=None,
+                 has_remember=False, remember_var=None, command=None, **kwargs):
+        super().__init__(master, fg_color='transparent', **kwargs)
 
         self.values = values
         self.theme_color = theme_color
@@ -179,6 +190,7 @@ class ChoiceSelector(ctk.CTkFrame):
         self.text = text
         self.has_remember = has_remember
         self.remember_var = remember_var
+        self.command=command
 
         self.type_label = ctk.CTkLabel(self, text=text,
                                        font=('Helvetica', 12, 'bold'),
@@ -187,26 +199,31 @@ class ChoiceSelector(ctk.CTkFrame):
         self.type_label.grid(column=0, row=0, sticky='w', padx=(0, 20), pady=0)
 
         self.button = ctk.CTkSegmentedButton(self,
-                                                 values=self.values,
-                                                 selected_color=theme_color,
-                                                 selected_hover_color=hover_color,
-                                                 unselected_color='#2b2b2b',
-                                                 unselected_hover_color=theme_color,
-                                                 text_color="white",
-                                                 fg_color='#2b2b2b',
-                                                 font=('Helvetica', 12, 'bold'),
-                                                 height=35)
-        self.button.set(values[0])
+                                             values=self.values,
+                                             selected_color=theme_color,
+                                             selected_hover_color=hover_color,
+                                             unselected_color='#2b2b2b',
+                                             unselected_hover_color=theme_color,
+                                             text_color="white",
+                                             fg_color='#2b2b2b',
+                                             font=('Helvetica', 12, 'bold'),
+                                             height=35,
+                                             command=self.command
+                                                )
+        start_val = initial_value if initial_value in self.values else self.values[0]
+        self.after(10, lambda: self.button.set(start_val))
+        # Inside ChoiceSelector __init__
+        print(f"DEBUG: ChoiceSelector '{text}' received initial_value: '{initial_value}'")
         self.button.grid(row=0, column=1, sticky='w', pady=(10, 0))
 
         if has_remember:
             self.remember_btn_color = remember_btn_color
-            self.remember_button = CheckBoxButton(self,theme_color=self.remember_btn_color,
+            self.remember_button = CheckBoxButton(self, theme_color=self.remember_btn_color,
                                                   hover_color=remember_btn_color,
                                                   remember_var=self.remember_var,
                                                   text=self.text,
                                                   )
-            self.remember_button.grid(column=0, row=1, sticky='w',columnspan=2, pady=(5,0))
+            self.remember_button.grid(column=0, row=1, sticky='w', columnspan=2, pady=(5, 0))
 
 
 class InitButton(ctk.CTkFrame):
@@ -214,9 +231,10 @@ class InitButton(ctk.CTkFrame):
         super().__init__(master, **kwargs)
         self.theme_color = theme_color
 
+
 class CheckBoxButton(ctk.CTkFrame):
-    def __init__(self, master, theme_color,hover_color,remember_var, text, **kwargs):
-        super().__init__(master,fg_color='transparent', **kwargs)
+    def __init__(self, master, theme_color, hover_color, remember_var, text, **kwargs):
+        super().__init__(master, fg_color='transparent', **kwargs)
 
         self.theme_color = theme_color
         self.hover_color = hover_color

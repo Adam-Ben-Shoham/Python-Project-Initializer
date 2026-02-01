@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import threading
 from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector, CheckBoxButton
 from project_orchestrator import ProjectOrchestrator
@@ -66,11 +66,19 @@ class AppGui(ctk.CTk):
         self.name_section.grid(row=3, column=0, sticky='ew', padx=50, pady=(0, 10))
 
     def setup_root_dir_input(self):
+
+        saved_root_path = self.saved_settings.get('root_dir','')
+
         self.root_dir_selector = PathSelector(self,
                                               theme_color=MAIN_THEME_PURPLE,
                                               hover_color=DEEP_PURPLE,
                                               placeholder_name='Root Directory...',
                                               init_error_label=self.init_error_label)
+
+        if saved_root_path:
+            self.root_dir_selector.path_var.set(saved_root_path)
+            self.root_dir_selector.root_dir_input.configure(text_color='white')
+
         self.root_dir_selector.grid(row=2, column=0, sticky='ew', padx=50, pady=(40, 20))
 
     def setup_project_type_input(self):
@@ -86,27 +94,46 @@ class AppGui(ctk.CTk):
         self.project_type_selector.grid(row=4, column=0, sticky='ew', padx=50, pady=(0, 10))
 
     def setup_ide_choice_input(self):
+
         ide_choices = ['PyCharm', 'VSCode']
-        remember_ide = ctk.BooleanVar(value=False)
+        saved_ide_choice = self.saved_settings.get("ide_choice", 'PyCharm')
+
         self.ide_choice_selector = ChoiceSelector(self, theme_color=GREEN,
                                                   hover_color=GREEN,
                                                   remember_btn_color=MAIN_THEME_PURPLE,
                                                   text='Remember Ide',
                                                   values=ide_choices,
+                                                  initial_value=saved_ide_choice,
                                                   has_remember=True,
-                                                  remember_var=remember_ide,
+                                                  remember_var=self.remember_ide,
+                                                  command=self.update_ide_choice_input
                                                   )
-
+        self.ide_choice_selector.button.set(saved_ide_choice)
         self.ide_choice_selector.grid(row=5, column=0, sticky='ew', padx=50, pady=(0, 10))
 
+    def update_ide_choice_input(self,selected_value):
+        self.ide_path_input.ide_choice = selected_value
+
+        self.ide_path_input.on_change()
+
     def setup_ide_path_input(self):
+
+        saved_ide_path = self.saved_settings.get("ide_path", '')
 
         self.ide_path_input = PathSelector(self, theme_color=MAIN_THEME_PURPLE,
                                            hover_color=DEEP_PURPLE,
                                            placeholder_name='Select IDE Path...',
-                                           ide_choice='VSCode',
-                                           init_error_label=self.init_error_label)
+                                           ide_choice=self.ide_choice_selector.button.get(),
+                                           init_error_label=self.init_error_label,
+                                           tip='Tip: Right click your IDE and press "open file location"')
+
+        if saved_ide_path:
+            self.ide_path_input.path_var.set(saved_ide_path)
+            self.ide_path_input.root_dir_input.configure(text_color='white')
+
         self.ide_path_input.grid(row=6, column=0, sticky='ew', padx=50, pady=(0, 10))
+
+
 
     def setup_init_git_button(self):
         self.remember_git = ctk.BooleanVar(value=True)
@@ -118,7 +145,7 @@ class AppGui(ctk.CTk):
         self.init_git_button.grid(row=7, column=0, sticky='w', padx=50, pady=(0, 10))
 
     def setup_initialize_button(self):
-        self.init_button = ctk.CTkButton(self, text="Initialize",
+        self.init_button = ctk.CTkButton(self, text="Launch",
                                          height=50,
                                          font=('Helvetica', 16, 'bold'),
                                          fg_color=MAIN_THEME_PURPLE,
@@ -147,6 +174,27 @@ class AppGui(ctk.CTk):
             self.init_error_label.configure(text='Invalid IDE .exe Path')
             self.init_error_label.grid(row=9, column=0, sticky='ew', padx=50)
             return
+
+        if 'warning' in [self.name_section.name_status, self.root_dir_selector.root_dir_status, self.ide_path_input.ide_status]:
+            confirm = messagebox.askyesno("Just A Heads Up",
+                                          "Your project name doesn't follow standard Python conventions.\n\nDo you wish to proceed anyway?")
+            if not confirm:
+                return
+
+        self.init_error_label.grid_forget()
+
+        settings_to_save = {
+            "root_dir": self.root_dir_selector.get(),
+            "remember_root_dir": self.remember_root_dir.get(),
+
+            "ide_choice": self.ide_choice_selector.button.get(),
+            "remember_ide_choice": self.remember_ide.get(),
+
+            "ide_path": self.ide_path_input.get(),
+            "remember_ide_path": self.remember_ide.get()
+        }
+
+        self.settings_manager.save_settings(settings_to_save)
 
         return
 
