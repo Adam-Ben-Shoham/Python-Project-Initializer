@@ -25,6 +25,7 @@ class AppGui(ctk.CTk):
 
         self.remember_root_dir = ctk.BooleanVar(value=self.saved_settings.get("remember_root_dir", False))
         self.remember_ide = ctk.BooleanVar(value=self.saved_settings.get("remember_ide_choice", False))
+        self.remember_ide_path = ctk.BooleanVar(value=self.saved_settings.get("remember_ide_path", False))
         self.init_git = ctk.BooleanVar(value=True)
 
         self.setup_inputs()
@@ -73,7 +74,8 @@ class AppGui(ctk.CTk):
                                               theme_color=MAIN_THEME_PURPLE,
                                               hover_color=DEEP_PURPLE,
                                               placeholder_name='Root Directory...',
-                                              init_error_label=self.init_error_label)
+                                              init_error_label=self.init_error_label,
+                                              remember_var=self.remember_root_dir,)
 
         if saved_root_path:
             self.root_dir_selector.path_var.set(saved_root_path)
@@ -125,7 +127,8 @@ class AppGui(ctk.CTk):
                                            placeholder_name='Select IDE Path...',
                                            ide_choice=self.ide_choice_selector.button.get(),
                                            init_error_label=self.init_error_label,
-                                           tip='Tip: Right click your IDE and press "open file location"')
+                                           tip='Tip: Right click your IDE and press "open file location"',
+                                           remember_var=self.remember_ide_path)
 
         if saved_ide_path:
             self.ide_path_input.path_var.set(saved_ide_path)
@@ -160,6 +163,14 @@ class AppGui(ctk.CTk):
 
     def initialize(self):
         # check for errors
+        current_name = self.name_section.name_var.get().strip()
+        if current_name=='' or current_name==self.name_section.placeholder:
+            self.init_error_label.configure(text='Project name cannot be blank')
+            self.init_error_label.grid(row=9, column=0, sticky='ew', padx=50)
+            self.name_section.name_entry.configure(border_color='red')
+            self.name_section.name_status= 'invalid'
+            return
+
         if self.name_section.name_status == 'invalid':
             self.init_error_label.configure(text='Invalid Name')
             self.init_error_label.grid(row=9, column=0, sticky='ew', padx=50)
@@ -174,6 +185,7 @@ class AppGui(ctk.CTk):
             self.init_error_label.configure(text='Invalid IDE .exe Path')
             self.init_error_label.grid(row=9, column=0, sticky='ew', padx=50)
             return
+
 
         if 'warning' in [self.name_section.name_status, self.root_dir_selector.root_dir_status, self.ide_path_input.ide_status]:
             confirm = messagebox.askyesno("Just A Heads Up",
@@ -191,11 +203,13 @@ class AppGui(ctk.CTk):
             "remember_ide_choice": self.remember_ide.get(),
 
             "ide_path": self.ide_path_input.get(),
-            "remember_ide_path": self.remember_ide.get()
+            "remember_ide_path": self.remember_ide_path.get()
         }
 
         self.settings_manager.save_settings(settings_to_save)
 
+        test = self.settings_manager.load_settings()
+        print(test)
         return
 
 

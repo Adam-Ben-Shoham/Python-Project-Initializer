@@ -76,8 +76,13 @@ class InputValidator:
         if not path_var or path_var == "Select IDE Path..." or path_var == '':
             return 'valid', ''
 
+        if path_var.startswith('"') or path_var.endswith('"'):
+            return 'warning', 'Remove quotes from the start or end of the path'
+
         if not os.path.exists(path_var):
             return 'warning', 'Path does not exist'
+
+
 
         if not path_var.lower().endswith('.exe'):
             return 'invalid', 'Path must point to an executable (extension: ".exe")'
@@ -89,7 +94,7 @@ class InputValidator:
                 return 'invalid', "Looks like this path doesn't point to a PyCharm executable"
 
         elif ide_choice=='VSCode':
-            if 'code' not in file_name:
+            if 'code' not in file_name.lower():
                 return 'invalid', "Looks like this path doesn't point to a VSCode executable"
 
         return 'valid', ''
