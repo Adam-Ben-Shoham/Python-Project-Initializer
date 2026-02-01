@@ -29,6 +29,8 @@ class AppGui(ctk.CTk):
         self.remember_interpreter = ctk.BooleanVar(value=self.saved_settings.get("remember_interpreter", False))
         self.init_git = ctk.BooleanVar(value=True)
 
+        self.is_creating = False
+
         self.setup_inputs()
 
     def setup_window(self):
@@ -208,7 +210,7 @@ class AppGui(ctk.CTk):
             self.init_error_label.configure(text='Invalid Interpreter Input')
             self.init_error_label.grid(row=10, column=0, sticky='ew', padx=50)
 
-        if 'warning' in [self.name_section.name_status, self.root_dir_selector.root_dir_status, self.ide_path_input.ide_status]:
+        if self.name_section.name_status == 'warning':
             pop = CustomWarningBox(self, "Heads Up",
                                    "Project Name Not Up To Standard Python conventions. Proceed?",
                                    MAIN_THEME_PURPLE, DEEP_PURPLE)
@@ -244,16 +246,54 @@ class AppGui(ctk.CTk):
             'project_type': self.project_type_selector.button.get(),
             'install_libs': True
         }
-
+        self.is_creating = True
         self.init_button.configure(state="disabled", text="Creating Project...")
+        self.animate_button()
+
+        threading.Thread(target=self.run_creation, args=(user_input,), daemon=True).start()
 
     def run_creation(self,user_input):
 
-        project_orchestrator = ProjectOrchestrator(user_input)
+        self.project_orchestrator = ProjectOrchestrator(user_input)
 
-        success,message = project_orchestrator.create_project()
+        success,message = self.project_orchestrator.create_project()
 
+        self.is_creating = False
 
+        if success:
+            self.after(0,self.show_success_popup)
+            self.after(0, lambda: self.init_button.configure(text=f"Launch {self.name_section.name_var.get()}", state="normal"))
+
+        else:
+            self.after(0, lambda: self.init_error_label.configure(text=f"Error: {message}", text_color="red"))
+            self.after(0, lambda: self.init_error_label.grid(row=10, column=0, sticky='ew',
+                                                             padx=50))
+            self.after(0, lambda: self.init_button.configure(state="normal", text="Launch"))
+
+    def show_success_popup(self):
+        pop = CustomWarningBox(self, "Success!",
+                               message=f"Project Created Successfully, would you like to launch {self.name_section.name_var.get()}?",
+                               theme_color=GREEN,
+                               hover_color="#1a6341")
+        self.wait_window(pop)
+
+        if pop.result:
+            # make orchestrator launch
+            self.project_orchestrator.launch_ide()
+            self.destroy()
+        else:
+            self.destroy()
+
+    def animate_button(self, count=1):
+        if not self.is_creating:
+            return
+
+        dots = "." * count
+        self.init_button.configure(text=f"Initializing{dots}")
+
+        next_count = count + 1 if count < 3 else 1
+
+        self.after(200, lambda: self.animate_button(next_count))
 
 
 gui = AppGui()

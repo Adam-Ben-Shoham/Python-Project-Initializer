@@ -67,7 +67,7 @@ class ProjectConstructor:
         if platform.system() == 'Windows':
             python_venv_exe = os.path.join(venv_path, 'Scripts', 'python.exe')
         else:
-            python_venv_exe = os.path.join(venv_path, 'bin', 'python   ')
+            python_venv_exe = os.path.join(venv_path, 'bin', 'python')
 
         required_libs_file = os.path.join(project_path, 'requirements.txt')
 

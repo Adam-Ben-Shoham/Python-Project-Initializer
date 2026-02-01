@@ -47,38 +47,46 @@ class ProjectOrchestrator:
 
     def create_project(self):
 
-        ProjectConstructor.build_folder(self.final_path)
+        try:
+            ProjectConstructor.build_folder(self.final_path)
 
-        venv_path = ProjectConstructor.build_venv(self.py_interpreter, self.final_path)
+            venv_path = ProjectConstructor.build_venv(self.py_interpreter, self.final_path)
 
-        from constants import PROJECT_TEMPLATES
+            from constants import PROJECT_TEMPLATES
 
-        template = PROJECT_TEMPLATES.get(self.project_type,PROJECT_TEMPLATES['Basic'])
-        libraries = '\n'.join(template['libraries'])
-        ProjectConstructor.write_file('requirements.txt',self.final_path,libraries)
+            template = PROJECT_TEMPLATES.get(self.project_type,PROJECT_TEMPLATES['Basic'])
+            libraries = '\n'.join(template['libraries'])
+            ProjectConstructor.write_file('requirements.txt',self.final_path,libraries)
 
-        gitignore_content = self.generate_gitignore()
+            gitignore_content = self.generate_gitignore()
 
-        ProjectConstructor.write_file('.gitignore', self.final_path, gitignore_content)
+            ProjectConstructor.write_file('.gitignore', self.final_path, gitignore_content)
 
-        main_content = template['content']
-        ProjectConstructor.write_file('main.py',self.final_path,main_content)
+            main_content = template['content']
+            ProjectConstructor.write_file('main.py',self.final_path,main_content)
 
-        if self.install_libs and libraries:
-            ProjectConstructor.install_required_libs(venv_path, self.final_path)
+            if self.install_libs and libraries:
+                ProjectConstructor.install_required_libs(venv_path, self.final_path)
 
-        if self.init_git:
-            ProjectConstructor.create_local_git_repo(self.final_path)
+            if self.init_git:
+                ProjectConstructor.create_local_git_repo(self.final_path)
 
-        if self.ide_choice == 'VS Code':
-            vscode_folder = os.path.join(self.final_path, '.vscode')
+            if self.ide_choice == 'VS Code':
+                vscode_folder = os.path.join(self.final_path, '.vscode')
 
-            if not os.path.exists(vscode_folder):
-                os.makedirs(vscode_folder)
+                if not os.path.exists(vscode_folder):
+                    os.makedirs(vscode_folder)
 
-            trust_json = '{\n    "security.workspace.trust.enabled": false\n}'
+                trust_json = '{\n    "security.workspace.trust.enabled": false\n}'
 
-            ProjectConstructor.write_file('.vscode', vscode_folder, trust_json)
+                ProjectConstructor.write_file('.vscode', vscode_folder, trust_json)
+
+            return True, 'success'
+        except Exception as e:
+
+            return False, str(e)
+
+    def launch_ide(self):
 
         ProjectConstructor.launch_ide(self.ide_path, self.final_path)
 
@@ -160,7 +168,7 @@ def validate_directory(dir_input):
 
 
 def validate_executable(executable):
-    executable = executable.strip()
+    executable = executable.strip().strip('"')
 
     if not executable:
         raise ValueError(f'The executable path cannot be empty')
