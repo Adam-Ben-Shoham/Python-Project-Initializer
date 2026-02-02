@@ -52,6 +52,52 @@ class AppGui(ctk.CTk):
         for widget in self.main_container.winfo_children():
             widget.grid_forget()
 
+    def show_window_one(self):
+        self.clear_window()
+        self.setup_header()
+
+        self.root_dir_selector.grid(row=2,column=0,sticky = 'ew', padx= 50, pady=(20,20))
+        self.name_section.grid(row=3,column=0,sticky = 'ew', padx= 50, pady=(0,10))
+        self.project_type_selector.grid(row=4,column=0,sticky = 'ew', padx= 50, pady=(20,20))
+
+        self.next_btn = ctk.CTkButton(self.main_container, text="Next: Environment",
+                                      command=self.validate_window_one,
+                                      fg_color=BLUE, hover_color="#143766")
+        self.next_btn.grid(row=5, column=0, pady=30, padx=100, sticky='ew')
+
+    def show_window_two(self):
+        self.clear_window()
+
+        self.window_two_label = ctk.CTkLabel(self.main_container, text=f'Environment',font=('Helvetica', 24, 'bold'),text_color='white')
+        self.window_two_label.grid(row=0,column=0, pady=30, padx=100, sticky='ew')
+
+        self.ide_choice_selector.grid(row=1, column=0, sticky='ew', padx=50, pady=(20, 10))
+        self.ide_path_input.grid(row=2, column=0, sticky='ew', padx=50, pady=(0, 10))
+        self.interpreter_path_input.grid(row=3, column=0, sticky='ew', padx=50, pady=(0, 10))
+
+        self.nav_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
+        self.nav_frame.grid(row=4, column=0, pady=30, sticky="ew", padx=50)
+        self.nav_frame.grid_columnconfigure((0, 1), weight=1)
+
+        ctk.CTkButton(self.nav_frame, text="Back", command=self.show_window_one,
+                      fg_color="gray", hover_color="#3d3d3d").grid(row=0, column=0, padx=5, sticky='ew')
+
+        ctk.CTkButton(self.nav_frame, text="Next: Git", command=self.validate_window_two,
+                      fg_color=MAIN_THEME_PURPLE, hover_color=DEEP_PURPLE).grid(row=0, column=1, padx=5, sticky='ew')
+
+    def show_window_three(self):
+        self.clear_window()
+
+        self.nav_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
+        self.nav_frame.grid(row=4, column=0, pady=30, sticky="ew", padx=50)
+        self.nav_frame.grid_columnconfigure((0, 1), weight=1)
+
+        ctk.CTkButton(self.nav_frame, text="Back", command=self.show_window_two,
+                      fg_color="gray", hover_color="#3d3d3d").grid(row=0, column=0, padx=5, sticky='ew')
+
+        ctk.CTkButton(self.nav_frame, text="Next: Git", command=self.validate_window_three,
+                      fg_color=MAIN_THEME_PURPLE, hover_color=DEEP_PURPLE).grid(row=0, column=1, padx=5, sticky='ew')
+
     def setup_header(self):
         self.project_title = ctk.CTkLabel(self.main_container, text='Python KickStarter',
                                           font=('Helvetica', 24, 'bold'),
