@@ -199,7 +199,7 @@ class ChoiceSelector(ctk.CTkFrame):
         self.remember_var = remember_var
         self.command=command
 
-        self.type_label = ctk.CTkLabel(self, text=text,
+        self.type_label = ctk.CTkLabel(self, text=f'{text}:',
                                        font=('Helvetica', 12, 'bold'),
                                        text_color='white')
 
@@ -227,7 +227,7 @@ class ChoiceSelector(ctk.CTkFrame):
             self.remember_button = CheckBoxButton(self, theme_color=self.remember_btn_color,
                                                   hover_color=remember_btn_color,
                                                   remember_var=self.remember_var,
-                                                  text=self.text,
+                                                  text=f'Remember {self.text}',
                                                   )
             self.remember_button.grid(column=0, row=1, sticky='w', columnspan=2, pady=(5, 0))
 

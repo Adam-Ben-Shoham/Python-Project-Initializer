@@ -60,7 +60,7 @@ class InputValidator:
             return 'valid', ''
 
         if path_var.startswith('"') or path_var.endswith('"'):
-            return 'warning', 'Remove quotes from the start or end of the path'
+            return 'invalid', 'Remove quotes from the start or end of the path'
 
         if not os.path.exists(path_var):
             return 'warning', 'Path does not exist'
@@ -80,7 +80,7 @@ class InputValidator:
             return 'valid', ''
 
         if path_var.startswith('"') or path_var.endswith('"'):
-            return 'warning', 'Remove quotes from the start or end of the path'
+            return 'invalid', 'Remove quotes from the start or end of the path'
 
         if not os.path.exists(path_var):
             return 'warning', 'Path does not exist'
