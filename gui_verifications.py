@@ -63,7 +63,7 @@ class InputValidator:
             return 'invalid', 'Remove quotes from the start or end of the path'
 
         if not os.path.exists(path_var):
-            return 'warning', 'Path does not exist'
+            return 'invalid', 'Path does not exist'
 
         if not os.path.isdir(path_var):
             return 'invalid', 'Path is not a directory'
@@ -83,7 +83,7 @@ class InputValidator:
             return 'invalid', 'Remove quotes from the start or end of the path'
 
         if not os.path.exists(path_var):
-            return 'warning', 'Path does not exist'
+            return 'invalid', 'Path does not exist'
 
         if not path_var.lower().endswith('.exe'):
             return 'invalid', 'Path must point to an executable (extension: ".exe")'
@@ -103,6 +103,18 @@ class InputValidator:
                 return 'invalid', "Looks like this path doesn't point to a Python interpreter executable"
 
         return 'valid', ''
+
+    @staticmethod
+    def validate_git_url(url):
+
+        if url == 'Remote Git Repository Url...' or not url.strip():
+            return 'invalid', "Url cannot be empty"
+
+        pattern = r"^https://[a-zA-Z0-9.-]+/[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+\.git$"
+        if re.match(pattern, url.strip()):
+            return 'valid', ""
+        else:
+            return 'invalid', "Invalid Url format (must end in .git)"
 
 
 

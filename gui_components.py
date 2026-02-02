@@ -2,7 +2,6 @@ import customtkinter as ctk
 from gui_verifications import InputValidator
 from tkinter import filedialog
 from gui_utils import handle_focus_in, handle_focus_out, validate_variable
-from gui_settings import SettingsManager
 
 
 class ValidatedNameInput(ctk.CTkFrame):
@@ -72,7 +71,8 @@ class ValidatedNameInput(ctk.CTkFrame):
             self.init_error_label.grid_forget()
 
     def get(self):
-        return self.name_var.get()
+        val = self.name_var.get()
+        return "" if val == self.placeholder else val.strip()
 
 
 class PathSelector(ctk.CTkFrame):
@@ -124,7 +124,7 @@ class PathSelector(ctk.CTkFrame):
 
         self.remember_button = CheckBoxButton(self, theme_color=self.theme_color,
                                               hover_color=hover_color,
-                                              remember_var=self.remember_dir,
+                                              variable=self.remember_dir,
                                               text='Remember Path')
         self.remember_button.grid(column=0, row=2, sticky='w', padx=0, pady=(10, 0), columnspan=2)
 
@@ -151,7 +151,8 @@ class PathSelector(ctk.CTkFrame):
             self.root_dir_input.insert(0, folder_path)
 
     def get(self):
-        return self.path_var.get()
+        val = self.path_var.get()
+        return "" if val == self.placeholder else val.strip()
 
     def on_change(self, *args):
 
@@ -226,7 +227,7 @@ class ChoiceSelector(ctk.CTkFrame):
             self.remember_btn_color = remember_btn_color
             self.remember_button = CheckBoxButton(self, theme_color=self.remember_btn_color,
                                                   hover_color=remember_btn_color,
-                                                  remember_var=self.remember_var,
+                                                  variable=self.remember_var,
                                                   text=f'Remember {self.text}',
                                                   )
             self.remember_button.grid(column=0, row=1, sticky='w', columnspan=2, pady=(5, 0))
@@ -239,18 +240,18 @@ class InitButton(ctk.CTkFrame):
 
 
 class CheckBoxButton(ctk.CTkFrame):
-    def __init__(self, master, theme_color, hover_color, remember_var, text, **kwargs):
+    def __init__(self, master, theme_color, hover_color, variable, text, **kwargs):
         super().__init__(master, fg_color='transparent', **kwargs)
 
         self.theme_color = theme_color
         self.hover_color = hover_color
-        self.remember_var = remember_var
+        self.variable = variable
         self.text = text
 
         self.remember_button = ctk.CTkCheckBox(self, text=f'{text}',
                                                fg_color=theme_color,
                                                hover_color=hover_color,
-                                               variable=remember_var,
+                                               variable=variable,
                                                checkbox_height=18,
                                                checkbox_width=18,
                                                font=('Helvetica', 12, 'bold'))
@@ -288,3 +289,59 @@ class CustomWarningBox(ctk.CTkToplevel):
     def on_no(self):
         self.result = False
         self.destroy()
+
+
+class ValidatedUrlField(ctk.CTkFrame):
+    def __init__(self, master, theme_color, init_error_label, **kwargs):
+        super().__init__(master, fg_color='transparent', **kwargs)
+
+        self.url_status = None
+        self.init_error_label = init_error_label
+        self.theme_color = theme_color
+
+        self.placeholder = "https://github.com/user/repository.git"
+        self.placeholder_color = '#808080'
+
+        self.grid_columnconfigure(0, weight=1)
+
+        self.error_label = ctk.CTkLabel(self, text='', text_color='red',
+                                        font=('Helvetica', 11, 'bold'))
+
+        self.url_var = ctk.StringVar()
+
+        self.url_entry = ctk.CTkEntry(self, textvariable=self.url_var,
+                                      height=35, border_color=theme_color)
+        self.url_entry.grid(row=0, column=0, sticky='ew', pady=(0, 5))
+
+        self.url_entry.insert(0, self.placeholder)
+        self.url_entry.configure(text_color=self.placeholder_color)
+
+        self.url_entry.bind("<FocusIn>", lambda e: handle_focus_in(self.url_entry, self.url_var, self.placeholder))
+        self.url_entry.bind("<FocusOut>", lambda e: handle_focus_out(self.url_entry, self.url_var, self.placeholder))
+
+        self.url_var.trace_add('write', self.on_change)
+
+    def on_change(self, *args):
+        current_val = self.url_var.get()
+
+        status, error_message = InputValidator.validate_git_url(current_val)
+        self.url_status = status
+
+        validate_variable(variable=current_val,
+                          placeholder=self.placeholder,
+                          entry=self.url_entry,
+                          error_label=self.error_label,
+                          status=status,
+                          error_message=error_message,
+                          theme_color=self.theme_color)
+
+        if status != 'valid' and current_val != self.placeholder and current_val.strip() != "":
+            self.error_label.grid(row=1, column=0, sticky='w')
+        else:
+            self.error_label.grid_forget()
+            if status == 'valid':
+                self.init_error_label.grid_forget()
+
+    def get(self):
+        val = self.url_var.get()
+        return "" if val == self.placeholder else val.strip()

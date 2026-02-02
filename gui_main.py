@@ -1,7 +1,7 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import threading
-from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector, CheckBoxButton,CustomWarningBox
+from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector, CheckBoxButton,CustomWarningBox,ValidatedUrlField
 from project_orchestrator import ProjectOrchestrator
 import constants
 from gui_settings import SettingsManager
@@ -28,10 +28,13 @@ class AppGui(ctk.CTk):
         self.remember_ide_path = ctk.BooleanVar(value=self.saved_settings.get("remember_ide_path", False))
         self.remember_interpreter = ctk.BooleanVar(value=self.saved_settings.get("remember_interpreter", False))
         self.init_git = ctk.BooleanVar(value=True)
+        self.connect_repo = ctk.BooleanVar(value=False)
+        self.connect_repo.trace_add('write', self.toggle_remote_url_field)
 
         self.is_creating = False
 
         self.setup_inputs()
+
 
     def setup_window(self):
         self.title('Python KickStarter')
@@ -65,11 +68,29 @@ class AppGui(ctk.CTk):
                                       fg_color=BLUE, hover_color="#143766")
         self.next_btn.grid(row=5, column=0, pady=30, padx=100, sticky='ew')
 
+    def validate_window_one(self):
+
+        if self.name_section.name_status == 'invalid' or self.root_dir_selector.root_dir_status=='invalid':
+            self.error_feedback_label.configure(text='Resolve Errors Before Moving Forward')
+            self.error_feedback_label.grid(row=6,column=0,sticky='ew',pady=(0,10))
+            return
+
+        if self.name_section.name_status == 'warning':
+            pop = CustomWarningBox(self, "Heads Up",
+                                   "Project Name Not Up To Standard Python conventions. Proceed?",
+                                   MAIN_THEME_PURPLE, DEEP_PURPLE)
+            self.wait_window(pop)
+            if not pop.result:
+                return
+
+        self.error_feedback_label.grid_forget()
+        self.show_window_two()
+
     def show_window_two(self):
         self.clear_window()
 
-        self.window_two_label = ctk.CTkLabel(self.main_container, text=f'Environment',font=('Helvetica', 24, 'bold'),text_color='white')
-        self.window_two_label.grid(row=0,column=0, pady=30, padx=100, sticky='ew')
+        self.window_label.configure(text='Environment')
+        self.window_label.grid(row=0,column=0, pady=30, padx=100, sticky='ew')
 
         self.ide_choice_selector.grid(row=1, column=0, sticky='ew', padx=50, pady=(20, 10))
         self.ide_path_input.grid(row=2, column=0, sticky='ew', padx=50, pady=(0, 10))
@@ -85,11 +106,32 @@ class AppGui(ctk.CTk):
         ctk.CTkButton(self.nav_frame, text="Next: Git", command=self.validate_window_two,
                       fg_color=MAIN_THEME_PURPLE, hover_color=DEEP_PURPLE).grid(row=0, column=1, padx=5, sticky='ew')
 
+    def validate_window_two(self):
+
+        if self.ide_path_input.ide_status == 'invalid' or self.interpreter_path_input.interpreter_status=='invalid':
+            self.error_feedback_label.configure(text='Resolve Errors Before Moving Forward')
+            self.error_feedback_label.grid(row=5,column=0,sticky='ew',pady=(10,0))
+            return
+
+        self.error_feedback_label.grid_forget()
+        self.show_window_three()
+
     def show_window_three(self):
         self.clear_window()
 
+        self.window_label.configure(text='Git')
+        self.window_label.grid(row=0,column=0, pady=30, padx=50, sticky='ew')
+
+        self.git_frame.grid(row=1, column=0, sticky='ew', padx=50)
+
+        self.init_git_button.grid(row=0, column=0, sticky='w', pady=5)
+        self.connect_remote_repo_button.grid(row=1, column=0, sticky='w', pady=5)
+
+        # Trigger the toggle once to check if the URL field should be visible (if coming back)
+        self.toggle_remote_url_field()
+
         self.nav_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
-        self.nav_frame.grid(row=4, column=0, pady=30, sticky="ew", padx=50)
+        self.nav_frame.grid(row=3, column=0, pady=30, sticky="ew", padx=50)
         self.nav_frame.grid_columnconfigure((0, 1), weight=1)
 
         ctk.CTkButton(self.nav_frame, text="Back", command=self.show_window_two,
@@ -97,6 +139,11 @@ class AppGui(ctk.CTk):
 
         ctk.CTkButton(self.nav_frame, text="Next: Git", command=self.validate_window_three,
                       fg_color=MAIN_THEME_PURPLE, hover_color=DEEP_PURPLE).grid(row=0, column=1, padx=5, sticky='ew')
+
+    def validate_window_three(self):
+
+        pass
+
 
     def setup_header(self):
         self.project_title = ctk.CTkLabel(self.main_container, text='Python KickStarter',
@@ -111,6 +158,9 @@ class AppGui(ctk.CTk):
 
     def setup_inputs(self):
 
+        self.setup_window_label()
+        self.setup_error_label()
+
         self.setup_initialize_button()
         self.setup_root_dir_input()
         self.setup_name_input()
@@ -118,7 +168,17 @@ class AppGui(ctk.CTk):
         self.setup_ide_choice_input()
         self.setup_ide_path_input()
         self.setup_interpreter_path_input()
-        self.setup_init_git_button()
+        self.setup_git_section()
+
+    def setup_window_label(self):
+        self.window_label = ctk.CTkLabel(self.main_container, text=f'Environment', font=('Helvetica', 24, 'bold'),
+                                         text_color='white')
+
+    def setup_error_label(self):
+        self.error_feedback_label = ctk.CTkLabel(self.main_container,
+                                                 text="",
+                                                 text_color='red',
+                                                 font=('Helvetica', 12, 'bold'))
 
     def setup_name_input(self):
         self.name_section = ValidatedNameInput(self.main_container, theme_color=MAIN_THEME_PURPLE,
@@ -215,14 +275,30 @@ class AppGui(ctk.CTk):
 
 
 
-    def setup_init_git_button(self):
-        self.remember_git = ctk.BooleanVar(value=True)
-        self.init_git_button = CheckBoxButton(self.main_container, text='Initialize Local Git Repository',
+    def setup_git_section(self):
+
+        self.git_frame = ctk.CTkFrame(self.main_container,fg_color='transparent')
+
+        self.init_git_button = CheckBoxButton(self.git_frame, text='Initialize Local Git Repository',
                                               theme_color=MAIN_THEME_PURPLE,
                                               hover_color=DEEP_PURPLE,
-                                              remember_var=self.remember_git,
+                                              variable=self.init_git
                                               )
-        self.init_git_button.grid(row=8, column=0, sticky='w', padx=50, pady=(0, 10))
+
+        self.connect_remote_repo_button = CheckBoxButton(self.git_frame, text='Connect Remote Repository',
+                                                         theme_color=MAIN_THEME_PURPLE,
+                                                         hover_color=DEEP_PURPLE,
+                                                         variable=self.connect_repo)
+
+        self.remote_url_input = ValidatedUrlField(self.git_frame,
+                                                  theme_color=MAIN_THEME_PURPLE,
+                                                  init_error_label=self.init_error_label,)
+
+    def toggle_remote_url_field(self,*_args):
+        if self.connect_repo.get():
+            self.remote_url_input.grid(row=2,column=0, sticky='ew', padx=50, pady=(0, 10))
+        else:
+            self.remote_url_input.grid_forget()
 
     def setup_initialize_button(self):
         self.init_button = ctk.CTkButton(self.main_container, text="Launch",

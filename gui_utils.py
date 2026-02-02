@@ -10,7 +10,7 @@ def handle_focus_out(entry, string_var, placeholder, placeholder_color='#808080'
         entry.configure(text_color=placeholder_color)
 
 
-def validate_variable(variable, placeholder, entry, error_label, status, error_message, theme_color,tip=None):
+def validate_variable(variable, placeholder, entry, error_label, status, error_message, theme_color):
     if variable == placeholder or variable == "":
         error_label.configure(text="")
         entry.configure(border_color=theme_color)
