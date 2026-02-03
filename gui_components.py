@@ -5,10 +5,10 @@ from gui_utils import handle_focus_in, handle_focus_out, validate_variable
 
 
 class ValidatedNameInput(ctk.CTkFrame):
-    def __init__(self, master, theme_color, init_error_label, dir_selector=None, init_button=None, **kwargs):
+    def __init__(self, master, theme_color, error_feedback_label, dir_selector=None, init_button=None, **kwargs):
         super().__init__(master, fg_color='transparent', **kwargs)
         self.name_status = None
-        self.init_error_label = init_error_label
+        self.error_feedback_label = error_feedback_label
         self.theme_color = theme_color
         self.dir_selector = dir_selector
         self.init_button = init_button
@@ -64,11 +64,24 @@ class ValidatedNameInput(ctk.CTkFrame):
                           error_message=error_message,
                           theme_color=self.theme_color)
 
-        if status != 'valid' and error_message.strip():
-            self.error_label.grid(row=1, column=0, sticky='w')
-        else:
+        if status == 'valid':
+            self.name_entry.configure(border_color=self.theme_color)
+            self.error_feedback_label.grid_forget()
             self.error_label.grid_forget()
-            self.init_error_label.grid_forget()
+
+        elif status == 'warning':
+            self.name_entry.configure(border_color='#FFCC00')
+            self.error_feedback_label.grid_forget()  # Hide the BIG error
+
+            if error_message.strip():
+                self.error_label.configure(text=error_message, text_color='#FFCC00')
+                self.error_label.grid(row=1, column=0, sticky='w')
+
+        else:
+            if error_message.strip():
+                self.error_label.configure(text=error_message, text_color='red')
+                self.error_label.grid(row=1, column=0, sticky='w')
+
 
     def get(self):
         val = self.name_var.get()
@@ -256,6 +269,9 @@ class CheckBoxButton(ctk.CTkFrame):
                                                checkbox_width=18,
                                                font=('Helvetica', 12, 'bold'))
         self.remember_button.pack(padx=0, pady=0)
+
+    def set_text(self, new_text):
+        self.remember_button.configure(text=new_text)
 
 class CustomWarningBox(ctk.CTkToplevel):
     def __init__(self, master, title, message, theme_color, hover_color):
