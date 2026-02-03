@@ -267,7 +267,19 @@ class CustomWarningBox(ctk.CTkToplevel):
     def __init__(self, master, title, message, theme_color, hover_color):
         super().__init__(master)
         self.title(title)
-        self.geometry("400x200")
+
+        master_x = master.winfo_x()
+        master_y = master.winfo_y()
+        master_width = master.winfo_width()
+
+        pop_width = 350
+        pop_height = 200
+
+        x = master_x + master_width + 50
+        y = master_y + 280
+
+        self.geometry(f"{pop_width}x{pop_height}+{x}+{int(y)}")
+
         self.result = False
 
         self.attributes("-topmost", True)
@@ -350,3 +362,49 @@ class ValidatedUrlField(ctk.CTkFrame):
     def get(self):
         val = self.url_var.get()
         return "" if val == self.placeholder else val.strip()
+
+
+class LoadingPopup(ctk.CTkToplevel):
+    def __init__(self, master, project_name):
+        super().__init__(master)
+        self.title("Progress")
+
+        master_x = master.winfo_x()
+        master_y = master.winfo_y()
+        master_width = master.winfo_width()
+
+        pop_width = 350
+        pop_height = 200
+
+        x = master_x + master_width + 50
+        y = master_y + 280
+
+        self.geometry(f"{pop_width}x{pop_height}+{x}+{int(y)}")
+
+        self.attributes("-topmost", True)
+        self.resizable(False, False)
+        self.grid_columnconfigure(0, weight=1)
+
+        self.transient(master)
+        self.grab_set()
+
+        self.label = ctk.CTkLabel(self, text=f"Initializing {project_name}",
+                                  font=('Helvetica', 18, 'bold'))
+        self.label.grid(row=0, column=0, pady=(30, 5))
+
+        self.dots_label = ctk.CTkLabel(self, text="...", font=('Helvetica', 24, 'bold'))
+        self.dots_label.grid(row=1, column=0, pady=5)
+
+        self.sub_label = ctk.CTkLabel(self,
+                                      text="This may take a minute...   \n",
+                                      font=('Helvetica', 12), text_color="gray")
+        self.sub_label.grid(row=2, column=0, pady=(10, 20))
+
+        self.dot_count = 0
+        self.animate_dots()
+
+    def animate_dots(self):
+        if not self.winfo_exists(): return
+        self.dot_count = (self.dot_count + 1) % 4
+        self.dots_label.configure(text="." * self.dot_count)
+        self.after(500, self.animate_dots)

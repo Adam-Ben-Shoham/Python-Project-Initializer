@@ -1,8 +1,12 @@
 import os
 import platform
 import re
+import subprocess
+import sys
 
 from project_constructor import ProjectConstructor
+
+CREATE_NO_WINDOW = 0x08000000
 
 
 class ProjectOrchestrator:
@@ -126,6 +130,17 @@ class ProjectOrchestrator:
 
         return '\n\n'.join(gitignore_file)
 
+    def _run_silent_command(self, command):
+
+        return subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True,
+
+            creationflags=CREATE_NO_WINDOW if sys.platform == "win32" else 0
+        )
+
 
 def clean_and_validate_project_name(name):
     chars_to_clean = r'<>:"/\|?*'
@@ -204,3 +219,5 @@ def validate_git_url(url):
         raise ValueError(f'{url} is not a valid git url')
 
     return url
+
+

@@ -1,10 +1,24 @@
 import customtkinter as ctk
 import threading
 from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector, CheckBoxButton, CustomWarningBox, \
-    ValidatedUrlField
+    ValidatedUrlField, LoadingPopup
 from project_orchestrator import ProjectOrchestrator
 import constants
 from gui_settings import SettingsManager
+import os
+import sys
+
+
+def resource_path(relative_path):
+    try:
+
+        base_path = sys._MEIPASS
+    except Exception:
+
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 
 MAIN_THEME_PURPLE = '#8A2BE2'
 DEEP_PURPLE = '#6A0DAD'
@@ -22,7 +36,7 @@ class AppGui(ctk.CTk):
         self.setup_window()
         self.setup_header()
 
-        self.settings_manager = SettingsManager()
+        self.settings_manager = SettingsManager(resource_path("settings.json"))
         self.saved_settings = self.settings_manager.load_settings()
 
         self.remember_root_dir = ctk.BooleanVar(value=self.saved_settings.get("remember_root_dir", False))
@@ -42,7 +56,17 @@ class AppGui(ctk.CTk):
 
     def setup_window(self):
         self.title('Python KickStarter')
-        self.geometry('700x600')
+        width = 700
+        height = 600
+
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+
+        x = (screen_width // 2) - (width // 2)
+        y = (screen_height // 2) - (height // 2) - 150
+
+        self.geometry(f'{width}x{height}+{x}+{y}')
+
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -80,6 +104,7 @@ class AppGui(ctk.CTk):
 
         if current_name == "" or current_name == placeholder:
             self.name_section.name_entry.configure(border_color='red')
+            self.name_section.error_label.configure(text_color='red')
 
             self.name_section.error_label.configure(text="Project name cannot be blank")
             self.name_section.error_label.grid(row=1, column=0, sticky='w')
@@ -161,7 +186,7 @@ class AppGui(ctk.CTk):
                                                                                            sticky='ew')
 
     def validate_window_three(self):
-
+        print(self.connect_repo.get())
         if self.connect_repo.get():
             current_url = self.remote_url_input.url_var.get().strip()
             placeholder = self.remote_url_input.placeholder
@@ -181,10 +206,8 @@ class AppGui(ctk.CTk):
                 self.error_feedback_label.grid(row=4, column=0, sticky='ew', pady=(10, 0))
                 return
 
-            self.error_feedback_label.grid_forget()
-        else:
-            self.error_feedback_label.grid_forget()
-            # init function
+        self.error_feedback_label.grid_forget()
+        self.initialize()
 
     def setup_header(self):
         self.project_title = ctk.CTkLabel(self.main_container, text='Python KickStarter',
@@ -373,7 +396,7 @@ class AppGui(ctk.CTk):
         self.settings_manager.save_settings(settings_to_save)
 
         user_input = {
-            'project_name': self.name_section.name_var.get(),
+            'project_name': self.name_section.get(),
             'root_dir': self.root_dir_selector.root_dir_input.get(),
             'ide_choice': self.ide_choice_selector.button.get(),
             'py_interpreter': self.interpreter_path_input.get(),
@@ -385,8 +408,7 @@ class AppGui(ctk.CTk):
             'install_libs': True
         }
         self.is_creating = True
-        self.init_button.configure(state="disabled", text="Creating Project...")
-        self.animate_button()
+        self.loading_screen = LoadingPopup(self, user_input['project_name'])
 
         threading.Thread(target=self.run_creation, args=(user_input,), daemon=True).start()
 
@@ -398,16 +420,14 @@ class AppGui(ctk.CTk):
 
         self.is_creating = False
 
+        self.after(0, self.loading_screen.destroy)
+
         if success:
             self.after(0, self.show_success_popup)
-            self.after(0, lambda: self.init_button.configure(text=f"Launch {self.name_section.name_var.get()}",
-                                                             state="normal"))
 
         else:
-            self.after(0, lambda: self.init_error_label.configure(text=f"Error: {message}", text_color="red"))
-            self.after(0, lambda: self.init_error_label.grid(row=10, column=0, sticky='ew',
-                                                             padx=50))
-            self.after(0, lambda: self.init_button.configure(state="normal", text="Launch"))
+            self.after(0, lambda: self.error_feedback_label.configure(text=f"Error: {message}", text_color="red"))
+            self.after(0, lambda: self.error_feedback_label.grid(row=10, column=0, sticky='ew', padx=50))
 
     def show_success_popup(self):
         pop = CustomWarningBox(self, "Success!",
@@ -422,17 +442,6 @@ class AppGui(ctk.CTk):
             self.destroy()
         else:
             self.destroy()
-
-    def animate_button(self, count=1):
-        if not self.is_creating:
-            return
-
-        dots = "." * count
-        self.init_button.configure(text=f"Initializing{dots} \n\n\n This might take a few seconds...")
-
-        next_count = count + 1 if count < 3 else 1
-
-        self.after(1000, lambda: self.animate_button(next_count))
 
 
 gui = AppGui()
