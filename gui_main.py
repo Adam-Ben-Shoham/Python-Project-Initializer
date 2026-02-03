@@ -1,7 +1,8 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import threading
-from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector, CheckBoxButton,CustomWarningBox,ValidatedUrlField
+from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector, CheckBoxButton, CustomWarningBox, \
+    ValidatedUrlField
 from project_orchestrator import ProjectOrchestrator
 import constants
 from gui_settings import SettingsManager
@@ -11,9 +12,10 @@ DEEP_PURPLE = '#6A0DAD'
 BLACK = '#2b2b2b'
 GREEN = '#1F7D53'
 DARKER_GREEN = '#145337'
-ORANGE = '#FF8C00'
-DARKER_ORANGE = '#E67E22'
+# ORANGE = '#FF8C00'
+# DARKER_ORANGE = '#E67E22'
 BLUE = '#1C4D8D'
+DARKER_BLUE = '#163D70'
 
 
 class AppGui(ctk.CTk):
@@ -30,24 +32,26 @@ class AppGui(ctk.CTk):
         self.remember_ide = ctk.BooleanVar(value=self.saved_settings.get("remember_ide_choice", False))
         self.remember_ide_path = ctk.BooleanVar(value=self.saved_settings.get("remember_ide_path", False))
         self.remember_interpreter = ctk.BooleanVar(value=self.saved_settings.get("remember_interpreter", False))
+
         self.init_git = ctk.BooleanVar(value=True)
+        self.init_git.trace_add('write', self.handle_local_git_toggle)
         self.connect_repo = ctk.BooleanVar(value=False)
         self.connect_repo.trace_add('write', self.toggle_remote_url_field)
+
 
         self.is_creating = False
 
         self.setup_inputs()
         self.show_window_one()
 
-
     def setup_window(self):
         self.title('Python KickStarter')
-        self.geometry('700x550')
+        self.geometry('700x600')
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        self.main_container = ctk.CTkFrame(self,width=700,height=550,fg_color='transparent')
-        self.main_container.grid(row = 0,column=0, pady = 20,sticky='n')
+        self.main_container = ctk.CTkFrame(self, width=700, height=600, fg_color='transparent')
+        self.main_container.grid(row=0, column=0, pady=20, sticky='n')
         self.main_container.grid_propagate(False)
         self.main_container.grid_columnconfigure(0, weight=1)
 
@@ -63,14 +67,16 @@ class AppGui(ctk.CTk):
         self.clear_window()
         self.setup_header()
 
-        self.root_dir_selector.grid(row=2,column=0,sticky = 'ew', padx= 50, pady=(20,20))
-        self.name_section.grid(row=3,column=0,sticky = 'ew', padx= 50, pady=(0,10))
-        self.project_type_selector.grid(row=4,column=0,sticky = 'ew', padx= 50, pady=(20,20))
+        self.root_dir_selector.grid(row=2, column=0, sticky='ew', padx=50, pady=(20, 20))
+        self.name_section.grid(row=3, column=0, sticky='ew', padx=50, pady=(0, 10))
+        self.project_type_selector.grid(row=4, column=0, sticky='ew', padx=50, pady=(20, 20))
 
-        self.next_btn = ctk.CTkButton(self.main_container, text="Next: Environment",
+        self.next_btn = ctk.CTkButton(self.main_container, text="Continue",
                                       command=self.validate_window_one,
-                                      fg_color=MAIN_THEME_PURPLE, hover_color=DEEP_PURPLE)
-        self.next_btn.grid(row=5, column=0, pady=30, padx=100, sticky='ew')
+                                      fg_color=MAIN_THEME_PURPLE, hover_color=DEEP_PURPLE,
+                                      height=45,
+                                      font=('helvetica',17,'bold'))
+        self.next_btn.grid(row=5, column=0, pady=30,padx=50)
 
     def validate_window_one(self):
         current_name = self.name_section.name_var.get().strip()
@@ -78,13 +84,17 @@ class AppGui(ctk.CTk):
 
         if current_name == "" or current_name == placeholder:
             self.name_section.name_entry.configure(border_color='red')
+
+            self.name_section.error_label.configure(text="Project name cannot be blank")
+            self.name_section.error_label.grid(row=1, column=0, sticky='w')
+
             self.error_feedback_label.configure(text='Resolve Errors Before Moving Forward')
             self.error_feedback_label.grid(row=6, column=0, sticky='ew', pady=(0, 10))
             return
 
-        if self.name_section.name_status == 'invalid' or self.root_dir_selector.root_dir_status=='invalid':
+        if self.name_section.name_status == 'invalid' or self.root_dir_selector.root_dir_status == 'invalid':
             self.error_feedback_label.configure(text='Resolve Errors Before Moving Forward')
-            self.error_feedback_label.grid(row=6,column=0,sticky='ew',pady=(0,10))
+            self.error_feedback_label.grid(row=6, column=0, sticky='ew', pady=(0, 10))
             return
 
         if self.name_section.name_status == 'warning':
@@ -102,7 +112,7 @@ class AppGui(ctk.CTk):
         self.clear_window()
 
         self.window_label.configure(text='Environment')
-        self.window_label.grid(row=0,column=0, pady=(40,35), padx=100, sticky='ew')
+        self.window_label.grid(row=0, column=0, pady=(40, 35), padx=100, sticky='ew')
 
         self.ide_choice_selector.grid(row=1, column=0, sticky='ew', padx=50, pady=(0, 10))
         self.ide_path_input.grid(row=2, column=0, sticky='ew', padx=50, pady=(0, 10))
@@ -113,16 +123,18 @@ class AppGui(ctk.CTk):
         self.nav_frame.grid_columnconfigure((0, 1), weight=1)
 
         ctk.CTkButton(self.nav_frame, text="Back", command=self.show_window_one,
-                      fg_color="#2F3640", hover_color="#3d3d3d",font=('helvetica',16)).grid(row=0, column=0, padx=5, sticky='ew')
+                      fg_color="#2F3640", hover_color="#3d3d3d", font=('helvetica', 16)).grid(row=0, column=0, padx=5,
+                                                                                              sticky='ew')
 
         ctk.CTkButton(self.nav_frame, text="Next: Git", command=self.validate_window_two,
-                      fg_color=GREEN, hover_color=DARKER_GREEN,font=('helvetica',16)).grid(row=0, column=1, padx=5, sticky='ew')
+                      fg_color=GREEN, hover_color=DARKER_GREEN, font=('helvetica', 16)).grid(row=0, column=1, padx=5,
+                                                                                             sticky='ew')
 
     def validate_window_two(self):
 
-        if self.ide_path_input.ide_status == 'invalid' or self.interpreter_path_input.interpreter_status=='invalid':
+        if self.ide_path_input.ide_status == 'invalid' or self.interpreter_path_input.interpreter_status == 'invalid':
             self.error_feedback_label.configure(text='Resolve Errors Before Moving Forward')
-            self.error_feedback_label.grid(row=5,column=0,sticky='ew',pady=(10,0))
+            self.error_feedback_label.grid(row=5, column=0, sticky='ew', pady=(10, 0))
             return
 
         self.error_feedback_label.grid_forget()
@@ -132,7 +144,7 @@ class AppGui(ctk.CTk):
         self.clear_window()
 
         self.window_label.configure(text='Git')
-        self.window_label.grid(row=0,column=0, pady=(40,150), padx=50, sticky='ew')
+        self.window_label.grid(row=0, column=0, pady=(40, 150), padx=50, sticky='ew')
 
         self.git_frame.grid(row=1, column=0, sticky='ew', padx=50)
 
@@ -144,15 +156,39 @@ class AppGui(ctk.CTk):
         self.nav_frame.grid_columnconfigure((0, 1), weight=1)
 
         ctk.CTkButton(self.nav_frame, text="Back", command=self.show_window_two,
-                      fg_color="#2F3640", hover_color="#3d3d3d",font=('helvetica',16)).grid(row=0, column=0, padx=5, sticky='ew')
+                      fg_color="#2F3640", hover_color="#3d3d3d", font=('helvetica', 16)).grid(row=0, column=0, padx=5,
+                                                                                              sticky='ew')
 
-        ctk.CTkButton(self.nav_frame, text=f"Initialize {self.name_section.name_var.get()}", command=self.validate_window_three,
-                      fg_color=ORANGE, hover_color=DARKER_ORANGE,font=('helvetica',16)).grid(row=0, column=1, padx=5, sticky='ew')
+        ctk.CTkButton(self.nav_frame, text=f"Initialize {self.name_section.name_var.get()}",
+                      command=self.validate_window_three,
+                      fg_color=BLUE, hover_color=DARKER_BLUE, font=('helvetica', 16)).grid(row=0, column=1, padx=5,
+                                                                                               sticky='ew')
 
     def validate_window_three(self):
 
-        pass
+        if self.connect_repo.get():
+            current_url = self.remote_url_input.url_var.get().strip()
+            placeholder = self.remote_url_input.placeholder
 
+            if current_url == "" or current_url == placeholder:
+                self.remote_url_input.url_entry.configure(border_color='red')
+
+                self.remote_url_input.error_label.configure(text="URL cannot be blank")
+                self.remote_url_input.error_label.grid(row=3, column=0, sticky='w')
+
+                self.error_feedback_label.configure(text='Resolve Errors Before Moving Forward')
+                self.error_feedback_label.grid(row=4, column=0, sticky='ew', pady=(10, 0))
+                return
+
+            if self.remote_url_input.url_status != 'valid':
+                self.error_feedback_label.configure(text='Resolve Errors Before Moving Forward')
+                self.error_feedback_label.grid(row=4, column=0, sticky='ew', pady=(10, 0))
+                return
+
+            self.error_feedback_label.grid_forget()
+        else:
+            self.error_feedback_label.grid_forget()
+            # init function
 
     def setup_header(self):
         self.project_title = ctk.CTkLabel(self.main_container, text='Python KickStarter',
@@ -163,14 +199,13 @@ class AppGui(ctk.CTk):
         self.subheader = ctk.CTkLabel(self.main_container, text='Automate Your Project Creation',
                                       font=('Helvetica', 16, 'bold'),
                                       text_color='white')
-        self.subheader.grid(column=0, row=1, sticky='NSEW', padx=10,pady=(0,20))
+        self.subheader.grid(column=0, row=1, sticky='NSEW', padx=10, pady=(0, 20))
 
     def setup_inputs(self):
 
         self.setup_window_label()
         self.setup_error_label()
 
-        self.setup_initialize_button()
         self.setup_root_dir_input()
         self.setup_name_input()
         self.setup_project_type_input()
@@ -192,26 +227,22 @@ class AppGui(ctk.CTk):
     def setup_name_input(self):
         self.name_section = ValidatedNameInput(self.main_container, theme_color=MAIN_THEME_PURPLE,
                                                dir_selector=self.root_dir_selector,
-                                               init_button=self.init_button,
                                                error_feedback_label=self.error_feedback_label)
-
 
     def setup_root_dir_input(self):
 
-        saved_root_path = self.saved_settings.get('root_dir','')
+        saved_root_path = self.saved_settings.get('root_dir', '')
 
         self.root_dir_selector = PathSelector(self.main_container,
                                               theme_color=MAIN_THEME_PURPLE,
                                               hover_color=DEEP_PURPLE,
                                               placeholder_name='Root Directory...',
-                                              init_error_label=self.init_error_label,
-                                              remember_var=self.remember_root_dir,)
+                                              remember_var=self.remember_root_dir,
+                                              error_feedback_label=self.error_feedback_label)
 
         if saved_root_path:
             self.root_dir_selector.path_var.set(saved_root_path)
             self.root_dir_selector.root_dir_input.configure(text_color='white')
-
-
 
     def setup_project_type_input(self):
         types = list(constants.PROJECT_TEMPLATES.keys())
@@ -222,8 +253,6 @@ class AppGui(ctk.CTk):
                                                     hover_color=DEEP_PURPLE,
                                                     text='Project Type'
                                                     )
-
-
 
     def setup_ide_choice_input(self):
 
@@ -242,8 +271,7 @@ class AppGui(ctk.CTk):
                                                   )
         self.ide_choice_selector.button.set(saved_ide_choice)
 
-
-    def update_ide_choice_input(self,selected_value):
+    def update_ide_choice_input(self, selected_value):
         self.ide_path_input.ide_choice = selected_value
 
         self.ide_path_input.on_change()
@@ -256,7 +284,7 @@ class AppGui(ctk.CTk):
                                            hover_color=DARKER_GREEN,
                                            placeholder_name='Select IDE Path...',
                                            ide_choice=self.ide_choice_selector.button.get(),
-                                           init_error_label=self.init_error_label,
+                                           error_feedback_label=self.error_feedback_label,
                                            tip='Tip: Right click your IDE and press "open file location", look for an exe file',
                                            remember_var=self.remember_ide_path)
 
@@ -264,107 +292,64 @@ class AppGui(ctk.CTk):
             self.ide_path_input.path_var.set(saved_ide_path)
             self.ide_path_input.root_dir_input.configure(text_color='white')
 
-
-
     def setup_interpreter_path_input(self):
         saved_interpreter = self.saved_settings.get("interpreter", '')
 
         self.interpreter_path_input = PathSelector(self.main_container, theme_color=GREEN,
-                                             hover_color=DARKER_GREEN,
-                                             placeholder_name='Select Interpreter...',
-                                             init_error_label=self.init_error_label,
-                                             tip='Tip: In your IDE terminal, type "python where", look for python.exe at the end of the path',
-                                             remember_var=self.remember_interpreter,
+                                                   hover_color=DARKER_GREEN,
+                                                   placeholder_name='Select Interpreter...',
+                                                   error_feedback_label=self.error_feedback_label,
+                                                   tip='Tip: In your IDE terminal, type "python where", look for python.exe at the end of the path',
+                                                   remember_var=self.remember_interpreter,
                                                    interpreter_choice=True)
         if saved_interpreter:
             self.interpreter_path_input.path_var.set(saved_interpreter)
             self.interpreter_path_input.root_dir_input.configure(text_color='white')
 
-
-
-
-
     def setup_git_section(self):
 
-        self.git_frame = ctk.CTkFrame(self.main_container,fg_color='transparent')
+        self.git_frame = ctk.CTkFrame(self.main_container, fg_color='transparent')
         self.git_frame.columnconfigure(0, weight=1)
         self.init_git_button = CheckBoxButton(self.git_frame, text='Initialize Local Git Repository',
-                                              theme_color=ORANGE,
-                                              hover_color=DARKER_ORANGE,
+                                              theme_color=BLUE,
+                                              hover_color=DARKER_BLUE,
                                               variable=self.init_git
                                               )
 
         self.connect_remote_repo_button = CheckBoxButton(self.git_frame, text='Connect Remote Repository',
-                                                         theme_color=ORANGE,
-                                                         hover_color=DARKER_ORANGE,
+                                                         theme_color=BLUE,
+                                                         hover_color=DARKER_BLUE,
                                                          variable=self.connect_repo)
 
         self.remote_url_input = ValidatedUrlField(self.git_frame,
-                                                  theme_color=ORANGE,
-                                                  init_error_label=self.init_error_label,)
+                                                  theme_color=BLUE,
+                                                  error_feedback_label=self.error_feedback_label, )
 
-    def toggle_remote_url_field(self,*_args):
+    def toggle_remote_url_field(self, *_args):
         if self.connect_repo.get():
-            self.remote_url_input.grid(row=2,column=0, sticky='ew', padx=0, pady=(10, 5))
-            self.connect_remote_repo_button.set_text(new_text='Connect Remote Repository (Enter Remote Git Repository Url Below)')
+            self.remote_url_input.grid(row=2, column=0, sticky='ew', padx=0, pady=(10, 5))
+            self.connect_remote_repo_button.set_text(
+                new_text='Connect Remote Repository (Enter Remote Git Repository Url Below)')
         else:
             self.remote_url_input.grid_forget()
             self.connect_remote_repo_button.set_text(new_text='Connect Remote Repository')
+            self.error_feedback_label.grid_forget()
+            self.remote_url_input.url_entry.configure(border_color=BLUE)
+            self.remote_url_input.error_label.grid_forget()
 
-    def setup_initialize_button(self):
-        self.init_button = ctk.CTkButton(self.main_container, text="Launch",
-                                         height=50,
-                                         font=('Helvetica', 16, 'bold'),
-                                         fg_color=MAIN_THEME_PURPLE,
-                                         hover_color=DEEP_PURPLE,
-                                         command=self.initialize
-                                         )
+    def handle_local_git_toggle(self, *_):
+        if not self.init_git.get():
+            self.connect_repo.set(False)
 
+            self.connect_remote_repo_button.grid_forget()
 
-        self.init_error_label = ctk.CTkLabel(self.main_container, text_color='red',
-                                             font=('Helvetica', 11, 'bold'),
-                                             )
+            self.remote_url_input.grid_forget()
+        else:
+
+            self.connect_remote_repo_button.grid(row=1, column=0, sticky='w', pady=5)
 
 
     def initialize(self):
-        # check for errors
-        current_name = self.name_section.name_var.get().strip()
-        if current_name=='' or current_name==self.name_section.placeholder:
-            self.init_error_label.configure(text='Project name cannot be blank')
-            self.init_error_label.grid(row=10, column=0, sticky='ew', padx=50)
-            self.name_section.name_entry.configure(border_color='red')
-            self.name_section.name_status= 'invalid'
-            return
-
-        if self.name_section.name_status == 'invalid':
-            self.init_error_label.configure(text='Invalid Name')
-            self.init_error_label.grid(row=10, column=0, sticky='ew', padx=50)
-            return
-
-        if self.root_dir_selector.root_dir_status == 'invalid':
-            self.init_error_label.configure(text='Invalid Root Directory')
-            self.init_error_label.grid(row=10, column=0, sticky='ew', padx=50)
-            return
-
-        if self.ide_path_input.ide_status == 'invalid':
-            self.init_error_label.configure(text='Invalid IDE .exe Path')
-            self.init_error_label.grid(row=10, column=0, sticky='ew', padx=50)
-            return
-
-        if self.interpreter_path_input.interpreter_status == 'invalid':
-            self.init_error_label.configure(text='Invalid Interpreter Input')
-            self.init_error_label.grid(row=10, column=0, sticky='ew', padx=50)
-            return
-
-        if self.name_section.name_status == 'warning':
-            pop = CustomWarningBox(self, "Heads Up",
-                                   "Project Name Not Up To Standard Python conventions. Proceed?",
-                                   MAIN_THEME_PURPLE, DEEP_PURPLE)
-            self.wait_window(pop)
-            if not pop.result:
-                return
-
-        self.init_error_label.grid_forget()
 
         settings_to_save = {
             "root_dir": self.root_dir_selector.get(),
@@ -398,17 +383,18 @@ class AppGui(ctk.CTk):
 
         threading.Thread(target=self.run_creation, args=(user_input,), daemon=True).start()
 
-    def run_creation(self,user_input):
+    def run_creation(self, user_input):
 
         self.project_orchestrator = ProjectOrchestrator(user_input)
 
-        success,message = self.project_orchestrator.create_project()
+        success, message = self.project_orchestrator.create_project()
 
         self.is_creating = False
 
         if success:
-            self.after(0,self.show_success_popup)
-            self.after(0, lambda: self.init_button.configure(text=f"Launch {self.name_section.name_var.get()}", state="normal"))
+            self.after(0, self.show_success_popup)
+            self.after(0, lambda: self.init_button.configure(text=f"Launch {self.name_section.name_var.get()}",
+                                                             state="normal"))
 
         else:
             self.after(0, lambda: self.init_error_label.configure(text=f"Error: {message}", text_color="red"))
@@ -424,7 +410,7 @@ class AppGui(ctk.CTk):
         self.wait_window(pop)
 
         if pop.result:
-            # make orchestrator launch
+
             self.project_orchestrator.launch_ide()
             self.destroy()
         else:

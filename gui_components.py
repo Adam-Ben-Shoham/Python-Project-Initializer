@@ -5,13 +5,12 @@ from gui_utils import handle_focus_in, handle_focus_out, validate_variable
 
 
 class ValidatedNameInput(ctk.CTkFrame):
-    def __init__(self, master, theme_color, error_feedback_label, dir_selector=None, init_button=None, **kwargs):
+    def __init__(self, master, theme_color, error_feedback_label, dir_selector=None, **kwargs):
         super().__init__(master, fg_color='transparent', **kwargs)
         self.name_status = None
         self.error_feedback_label = error_feedback_label
         self.theme_color = theme_color
         self.dir_selector = dir_selector
-        self.init_button = init_button
 
         self.placeholder = "Project Name..."
         self.placeholder_color = '#808080'
@@ -47,11 +46,6 @@ class ValidatedNameInput(ctk.CTkFrame):
 
     def on_change(self, *args):
 
-        if self.name_var.get() != 'Project Name...':
-            self.init_button.configure(text=f'Initialize {self.name_var.get()}')
-        else:
-            self.init_button.configure(text='Initialize')
-
         root_dir = self.dir_selector.get()
         status, error_message = InputValidator.validate_project_name(self.name_var.get(), root_dir)
         self.name_status = status
@@ -71,7 +65,7 @@ class ValidatedNameInput(ctk.CTkFrame):
 
         elif status == 'warning':
             self.name_entry.configure(border_color='#FFCC00')
-            self.error_feedback_label.grid_forget()  # Hide the BIG error
+            self.error_feedback_label.grid_forget()
 
             if error_message.strip():
                 self.error_label.configure(text=error_message, text_color='#FFCC00')
@@ -82,22 +76,21 @@ class ValidatedNameInput(ctk.CTkFrame):
                 self.error_label.configure(text=error_message, text_color='red')
                 self.error_label.grid(row=1, column=0, sticky='w')
 
-
     def get(self):
         val = self.name_var.get()
         return "" if val == self.placeholder else val.strip()
 
 
 class PathSelector(ctk.CTkFrame):
-    def __init__(self, master, theme_color, hover_color, placeholder_name, init_error_label, ide_choice=None,
-                 remember_var=None,tip=None,interpreter_choice=None, **kwargs):
+    def __init__(self, master, theme_color, hover_color, placeholder_name, error_feedback_label, ide_choice=None,
+                 remember_var=None, tip=None, interpreter_choice=None, **kwargs):
         super().__init__(master, fg_color='transparent', **kwargs)
         self.ide_status = None
         self.root_dir_status = None
         self.interpreter_status = None
 
         self.tip = tip
-        self.init_error_label = init_error_label
+        self.error_feedback_label = error_feedback_label
         self.remember_var = remember_var
         self.interpreter_choice = interpreter_choice
 
@@ -143,11 +136,11 @@ class PathSelector(ctk.CTkFrame):
 
         if self.tip:
             self.tip_label = ctk.CTkLabel(self, text=tip, text_color='white',
-                                        font=('helvetica', 11, 'bold'))
+                                          font=('helvetica', 11, 'bold'))
             self.tip_label.grid(column=0, row=1, sticky='w')
 
         self.error_label = ctk.CTkLabel(self, text='', text_color='red',
-                                            font=('helvetica', 11, 'bold'))
+                                        font=('helvetica', 11, 'bold'))
 
         self.path_var.trace_add('write', self.on_change)
 
@@ -170,10 +163,12 @@ class PathSelector(ctk.CTkFrame):
     def on_change(self, *args):
 
         if self.interpreter_choice:
-            status,error_message = InputValidator.validate_executable_path(path_var=self.path_var.get(),interpreter_choice= self.interpreter_choice)
+            status, error_message = InputValidator.validate_executable_path(path_var=self.path_var.get(),
+                                                                            interpreter_choice=self.interpreter_choice)
             self.interpreter_status = status
         elif self.ide_choice:
-            status, error_message = InputValidator.validate_executable_path(path_var= self.path_var.get(), ide_choice= self.ide_choice)
+            status, error_message = InputValidator.validate_executable_path(path_var=self.path_var.get(),
+                                                                            ide_choice=self.ide_choice)
             self.ide_status = status
         else:
             status, error_message = InputValidator.validate_directory(self.path_var.get())
@@ -197,7 +192,7 @@ class PathSelector(ctk.CTkFrame):
 
             self.error_label.grid_forget()
             self.remember_button.grid(column=0, row=2, sticky='w', padx=0, pady=(10, 0), columnspan=2)
-            self.init_error_label.grid_forget()
+            self.error_feedback_label.grid_forget()
 
 
 class ChoiceSelector(ctk.CTkFrame):
@@ -211,7 +206,7 @@ class ChoiceSelector(ctk.CTkFrame):
         self.text = text
         self.has_remember = has_remember
         self.remember_var = remember_var
-        self.command=command
+        self.command = command
 
         self.type_label = ctk.CTkLabel(self, text=f'{text}:',
                                        font=('Helvetica', 12, 'bold'),
@@ -230,7 +225,7 @@ class ChoiceSelector(ctk.CTkFrame):
                                              font=('Helvetica', 12, 'bold'),
                                              height=35,
                                              command=self.command
-                                                )
+                                             )
         start_val = initial_value if initial_value in self.values else self.values[0]
         self.after(10, lambda: self.button.set(start_val))
 
@@ -244,12 +239,6 @@ class ChoiceSelector(ctk.CTkFrame):
                                                   text=f'Remember {self.text}',
                                                   )
             self.remember_button.grid(column=0, row=1, sticky='w', columnspan=2, pady=(5, 0))
-
-
-class InitButton(ctk.CTkFrame):
-    def __init__(self, master, theme_color, **kwargs):
-        super().__init__(master, **kwargs)
-        self.theme_color = theme_color
 
 
 class CheckBoxButton(ctk.CTkFrame):
@@ -273,14 +262,14 @@ class CheckBoxButton(ctk.CTkFrame):
     def set_text(self, new_text):
         self.remember_button.configure(text=new_text)
 
+
 class CustomWarningBox(ctk.CTkToplevel):
     def __init__(self, master, title, message, theme_color, hover_color):
         super().__init__(master)
         self.title(title)
         self.geometry("400x200")
-        self.result = False  # Track user choice
+        self.result = False
 
-        # Center the window
         self.attributes("-topmost", True)
         self.grid_columnconfigure(0, weight=1)
 
@@ -308,11 +297,11 @@ class CustomWarningBox(ctk.CTkToplevel):
 
 
 class ValidatedUrlField(ctk.CTkFrame):
-    def __init__(self, master, theme_color, init_error_label, **kwargs):
+    def __init__(self, master, theme_color, error_feedback_label, **kwargs):
         super().__init__(master, fg_color='transparent', **kwargs)
 
         self.url_status = None
-        self.init_error_label = init_error_label
+        self.error_feedback_label = error_feedback_label
         self.theme_color = theme_color
 
         self.placeholder = "https://github.com/user/repository.git"
@@ -356,7 +345,7 @@ class ValidatedUrlField(ctk.CTkFrame):
         else:
             self.error_label.grid_forget()
             if status == 'valid':
-                self.init_error_label.grid_forget()
+                self.error_feedback_label.grid_forget()
 
     def get(self):
         val = self.url_var.get()
