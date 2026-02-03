@@ -1,10 +1,10 @@
 import os
 import platform
+import re
 
 from project_constructor import ProjectConstructor
 
 
-# project_name,root_dir,ide_choice,py_interpreter,ide_path,init_git,project_type,install_libs
 class ProjectOrchestrator:
     def __init__(self, input_dict):
         self._clean_inputs(input_dict)
@@ -35,11 +35,20 @@ class ProjectOrchestrator:
 
         self.py_interpreter = validate_executable(input_dict['py_interpreter'])
 
+        ## validate the git section
+
+        self.init_git = input_dict['init_git']
+
+        if self.init_git:
+
+            self.connect_repo = input_dict['connect_repo']
+
+            if self.connect_repo:
+                self.remote_git_url = validate_git_url(input_dict['remote_git_url'])
+
         ## assign variables for the rest
 
         self.ide_choice = input_dict['ide_choice']
-
-        self.init_git = input_dict['init_git']
 
         self.project_type = input_dict['project_type']
 
@@ -54,22 +63,25 @@ class ProjectOrchestrator:
 
             from constants import PROJECT_TEMPLATES
 
-            template = PROJECT_TEMPLATES.get(self.project_type,PROJECT_TEMPLATES['Basic'])
+            template = PROJECT_TEMPLATES.get(self.project_type, PROJECT_TEMPLATES['Basic'])
             libraries = '\n'.join(template['libraries'])
-            ProjectConstructor.write_file('requirements.txt',self.final_path,libraries)
+            ProjectConstructor.write_file('requirements.txt', self.final_path, libraries)
 
             gitignore_content = self.generate_gitignore()
 
             ProjectConstructor.write_file('.gitignore', self.final_path, gitignore_content)
 
             main_content = template['content']
-            ProjectConstructor.write_file('main.py',self.final_path,main_content)
+            ProjectConstructor.write_file('main.py', self.final_path, main_content)
 
             if self.install_libs and libraries:
                 ProjectConstructor.install_required_libs(venv_path, self.final_path)
 
             if self.init_git:
                 ProjectConstructor.create_local_git_repo(self.final_path)
+
+                if self.connect_repo and self.remote_git_url:
+                    ProjectConstructor.connect_remote_git_repo(self.final_path, self.remote_git_url)
 
             if self.ide_choice == 'VS Code':
                 vscode_folder = os.path.join(self.final_path, '.vscode')
@@ -78,13 +90,12 @@ class ProjectOrchestrator:
                     os.makedirs(vscode_folder)
 
                 trust_json = '{\n    "security.workspace.trust.enabled": false\n}'
-
-                ProjectConstructor.write_file('.vscode', vscode_folder, trust_json)
+                ProjectConstructor.write_file('settings.json', vscode_folder, trust_json)
 
             return True, 'success'
         except Exception as e:
 
-            return False, str(e)
+            return False, f"Project Creation Error: {str(e)}"
 
     def launch_ide(self):
 
@@ -184,3 +195,12 @@ def validate_executable(executable):
         raise ValueError(f'{executable} is not permitted for execution')
 
     return executable
+
+
+def validate_git_url(url):
+    pattern = r"^https://[a-zA-Z0-9.-]+/[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+\.git$"
+    if not re.match(pattern, url.strip()):
+        url = ''
+        raise ValueError(f'{url} is not a valid git url')
+
+    return url

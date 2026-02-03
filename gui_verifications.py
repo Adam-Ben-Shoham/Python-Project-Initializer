@@ -27,8 +27,7 @@ class InputValidator:
         if not re.match(r'^[a-zA-Z0-9_]*$', name):
             return 'invalid', 'Only use letters,numbers and underscores'
 
-
-        if not root_path or root_path=='' or root_path == 'Root Directory...':
+        if not root_path or root_path == '' or root_path == 'Root Directory...':
             pass
 
         # collision checks - invalid and warnings:
@@ -74,9 +73,9 @@ class InputValidator:
         return 'valid', ''
 
     @staticmethod
-    def validate_executable_path(path_var,ide_choice=None,interpreter_choice=None):
+    def validate_executable_path(path_var, ide_choice=None, interpreter_choice=None):
 
-        if not path_var or path_var == "Select IDE Path..." or path_var== 'Select Interpreter' or path_var == '':
+        if not path_var or path_var == "Select IDE Path..." or path_var == 'Select Interpreter' or path_var == '':
             return 'valid', ''
 
         if path_var.startswith('"') or path_var.endswith('"'):
@@ -91,11 +90,11 @@ class InputValidator:
         file_name = os.path.basename(path_var)
 
         if not interpreter_choice:
-            if ide_choice=='PyCharm':
+            if ide_choice == 'PyCharm':
                 if 'pycharm' not in file_name:
                     return 'invalid', "Looks like this path doesn't point to a PyCharm executable"
 
-            elif ide_choice=='VSCode':
+            elif ide_choice == 'VSCode':
                 if 'code' not in file_name.lower():
                     return 'invalid', "Looks like this path doesn't point to a VSCode executable"
         else:
@@ -115,6 +114,3 @@ class InputValidator:
             return 'valid', ""
         else:
             return 'invalid', "Invalid Url format (must end in .git)"
-
-
-

@@ -62,7 +62,31 @@ class ProjectConstructor:
             raise RuntimeError(f'Git command not found. Make sure you have git installed in {path}')
 
     @staticmethod
-    def install_required_libs(venv_path,project_path):
+    def connect_remote_git_repo(project_path, remote_git_url):
+        try:
+            if not os.path.exists(os.path.join(project_path, ".git")):
+                subprocess.run(["git", "init"], cwd=project_path, check=True, capture_output=True)
+
+            check_remote = subprocess.run(["git", "remote"], cwd=project_path, capture_output=True, text=True)
+
+            if 'origin' in check_remote.stdout:
+                subprocess.run(["git", "remote", "set-url", "origin", remote_git_url],
+                               cwd=project_path, check=True, capture_output=True)
+            else:
+
+                subprocess.run(["git", "remote", "add", "origin", remote_git_url],
+                               cwd=project_path, check=True, capture_output=True)
+
+            subprocess.run(["git", "branch", "-M", "main"],
+                           cwd=project_path, check=True, capture_output=True)
+
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f'Remote git repo not initialized. error:{e.stderr}')
+        except FileNotFoundError:
+            raise RuntimeError(f'Git command not found. Make sure you have git installed in {project_path}')
+
+    @staticmethod
+    def install_required_libs(venv_path, project_path):
 
         if platform.system() == 'Windows':
             python_venv_exe = os.path.join(venv_path, 'Scripts', 'python.exe')
@@ -77,7 +101,7 @@ class ProjectConstructor:
         upgrade_pip_command = [python_venv_exe, '-m', 'pip', 'install', '--upgrade', 'pip']
         install_command = [python_venv_exe, '-m', 'pip', 'install', '-r', required_libs_file]
         try:
-            subprocess.run(upgrade_pip_command,check=True, capture_output=True, text=True)
+            subprocess.run(upgrade_pip_command, check=True, capture_output=True, text=True)
 
             subprocess.run(install_command, check=True, capture_output=True, text=True)
         except subprocess.CalledProcessError as e:
@@ -85,8 +109,9 @@ class ProjectConstructor:
 
     @staticmethod
     def launch_ide(ide_path, project_path):
-        command = [ide_path,project_path]
+        command = [ide_path, project_path]
         try:
-            subprocess.Popen(command,creationflags=subprocess.CREATE_NEW_CONSOLE if platform.system()=='windows' else 0)
+            subprocess.Popen(command,
+                             creationflags=subprocess.CREATE_NEW_CONSOLE if platform.system() == 'windows' else 0)
         except Exception as e:
             raise RuntimeError(f'Launching IDE failed: {e}')

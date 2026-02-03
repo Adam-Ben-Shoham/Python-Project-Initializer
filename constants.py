@@ -73,14 +73,14 @@ $RECYCLE.BIN/
 *.lnk
 """,
 
-               'pycharm': """# --- PyCharm / JetBrains ---
+    'pycharm': """# --- PyCharm / JetBrains ---
 *.iws
 *.iml
 *.ipr
 out/
 """,
 
-'vscode': """# --- VS Code ---
+    'vscode': """# --- VS Code ---
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json

@@ -1,5 +1,4 @@
 import customtkinter as ctk
-from tkinter import filedialog, messagebox
 import threading
 from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector, CheckBoxButton, CustomWarningBox, \
     ValidatedUrlField
@@ -12,8 +11,6 @@ DEEP_PURPLE = '#6A0DAD'
 BLACK = '#2b2b2b'
 GREEN = '#1F7D53'
 DARKER_GREEN = '#145337'
-# ORANGE = '#FF8C00'
-# DARKER_ORANGE = '#E67E22'
 BLUE = '#1C4D8D'
 DARKER_BLUE = '#163D70'
 
@@ -37,7 +34,6 @@ class AppGui(ctk.CTk):
         self.init_git.trace_add('write', self.handle_local_git_toggle)
         self.connect_repo = ctk.BooleanVar(value=False)
         self.connect_repo.trace_add('write', self.toggle_remote_url_field)
-
 
         self.is_creating = False
 
@@ -75,8 +71,8 @@ class AppGui(ctk.CTk):
                                       command=self.validate_window_one,
                                       fg_color=MAIN_THEME_PURPLE, hover_color=DEEP_PURPLE,
                                       height=45,
-                                      font=('helvetica',17,'bold'))
-        self.next_btn.grid(row=5, column=0, pady=30,padx=50)
+                                      font=('helvetica', 17, 'bold'))
+        self.next_btn.grid(row=5, column=0, pady=30, padx=50)
 
     def validate_window_one(self):
         current_name = self.name_section.name_var.get().strip()
@@ -162,7 +158,7 @@ class AppGui(ctk.CTk):
         ctk.CTkButton(self.nav_frame, text=f"Initialize {self.name_section.name_var.get()}",
                       command=self.validate_window_three,
                       fg_color=BLUE, hover_color=DARKER_BLUE, font=('helvetica', 16)).grid(row=0, column=1, padx=5,
-                                                                                               sticky='ew')
+                                                                                           sticky='ew')
 
     def validate_window_three(self):
 
@@ -325,12 +321,22 @@ class AppGui(ctk.CTk):
                                                   theme_color=BLUE,
                                                   error_feedback_label=self.error_feedback_label, )
 
+        self.remote_disclaimer = ctk.CTkLabel(
+            self.git_frame,
+            text="Note: After launch, you must manually Commit and Push \ninside your IDE to authenticate with GitHub.",
+            font=('Helvetica', 11, 'italic'),
+            text_color="#AAAAAA",
+            justify="left"
+        )
+
     def toggle_remote_url_field(self, *_args):
         if self.connect_repo.get():
             self.remote_url_input.grid(row=2, column=0, sticky='ew', padx=0, pady=(10, 5))
             self.connect_remote_repo_button.set_text(
                 new_text='Connect Remote Repository (Enter Remote Git Repository Url Below)')
+            self.remote_disclaimer.grid(row=3, column=0, sticky='w', padx=5, pady=(10, 5))
         else:
+            self.remote_disclaimer.grid_forget()
             self.remote_url_input.grid_forget()
             self.connect_remote_repo_button.set_text(new_text='Connect Remote Repository')
             self.error_feedback_label.grid_forget()
@@ -347,7 +353,6 @@ class AppGui(ctk.CTk):
         else:
 
             self.connect_remote_repo_button.grid(row=1, column=0, sticky='w', pady=5)
-
 
     def initialize(self):
 
@@ -374,6 +379,8 @@ class AppGui(ctk.CTk):
             'py_interpreter': self.interpreter_path_input.get(),
             'ide_path': self.ide_path_input.get(),
             'init_git': self.init_git.get(),
+            'connect_repo': self.connect_repo.get(),
+            'remote_git_url': self.remote_url_input.url_var.get(),
             'project_type': self.project_type_selector.button.get(),
             'install_libs': True
         }
@@ -421,11 +428,11 @@ class AppGui(ctk.CTk):
             return
 
         dots = "." * count
-        self.init_button.configure(text=f"Initializing{dots}")
+        self.init_button.configure(text=f"Initializing{dots} \n\n\n This might take a few seconds...")
 
         next_count = count + 1 if count < 3 else 1
 
-        self.after(200, lambda: self.animate_button(next_count))
+        self.after(1000, lambda: self.animate_button(next_count))
 
 
 gui = AppGui()
