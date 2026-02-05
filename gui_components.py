@@ -408,3 +408,102 @@ class LoadingPopup(ctk.CTkToplevel):
         self.dot_count = (self.dot_count + 1) % 4
         self.dots_label.configure(text="." * self.dot_count)
         self.after(500, self.animate_dots)
+
+class DescriptionBox(ctk.CTkFrame):
+    def __init__(self, master, theme_color, hover_color,max_chars):
+        super().__init__(master,fg_color='transparent')
+        self.theme_color = theme_color
+        self.hover_color = hover_color
+        self.max_chars = max_chars
+
+        self.height = 90
+
+
+        self.box_label = ctk.CTkLabel(self,text='Optional: Describe your project to get AI generated name suggestions')
+        self.box_label.grid(row=0, column=0,sticky = 'w', pady=(10,5))
+
+        self.placeholder = 'Project Description...'
+        self.placeholder_color = '#808080'
+        self.description_var = ctk.StringVar()
+
+        self.grid_columnconfigure(0, weight=1)
+
+        self.counter_label = ctk.CTkLabel(self, text=f"0/{self.max_chars}", font=("helvetica", 11),
+                                          text_color="#808080")
+        self.counter_label.grid(row=0, column=0, sticky='e', pady=(10, 5))
+
+        self.description_entry = ctk.CTkTextbox(self,height=self.height,
+                                              border_color=theme_color,
+                                                border_width=2,
+                                                fg_color='#333333',
+                                               )
+
+        self.description_entry.insert(0.0, self.placeholder)
+        self.description_entry.configure(text_color=self.placeholder_color)
+
+        self.description_entry.bind("<FocusIn>", self.handle_focus_in)
+        self.description_entry.bind("<FocusOut>", self.handle_focus_out)
+        self.description_entry.bind("<KeyRelease>", self.update_counter)
+        self.description_entry.bind("<Key>", self.check_limit)
+
+        self.description_entry.grid(row=1, column=0, sticky='ew', pady=(10, 5))
+
+
+        self.generate_button= ctk.CTkButton(self,fg_color=self.theme_color,
+                                            hover_color=self.hover_color,
+                                            text="Generate Names",
+                                            width=30)
+        self.generate_button.grid(row=2, column=0, sticky='w', pady=(5, 5))
+
+    def update_counter(self,event=None):
+
+        content = self.description_entry.get("0.0", "end-1c")
+
+        if content == self.placeholder:
+            count = 0
+        else:
+            count = len(content)
+
+        if count > self.max_chars:
+            self.description_entry.delete("0.0 + 200 chars", "end")
+            count = self.max_chars
+
+        self.counter_label.configure(text=f"{count}/{self.max_chars}")
+
+        if count >= self.max_chars:
+            self.counter_label.configure(text_color="#FF4B4B")
+        else:
+            self.counter_label.configure(text_color="#808080")
+
+    def check_limit(self, event):
+
+        if event.keysym in ("BackSpace", "Delete", "Left", "Right", "Up", "Down"):
+            return
+
+        current_text = self.description_entry.get("0.0", "end-1c")
+
+        if len(current_text) >= self.max_chars:
+            try:
+                if not self.description_entry.tag_ranges("sel"):
+                    return "break"
+            except:
+                return "break"
+
+    def handle_focus_in(self, event):
+        current_text = self.description_entry.get("0.0", "end-1c")
+        if current_text == self.placeholder:
+            self.description_entry.delete("0.0", "end")
+            self.description_entry.configure(text_color='white')
+        self.update_counter()
+
+    def handle_focus_out(self, event):
+        current_text = self.description_entry.get("0.0", "end-1c").strip()
+        if not current_text:
+            self.description_entry.insert("0.0", self.placeholder)
+            self.description_entry.configure(text_color=self.placeholder_color)
+        self.update_counter()
+
+    def get(self):
+        val = self.description_entry.get("0.0", "end-1c")
+        return "" if val == self.placeholder else val
+

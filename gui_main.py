@@ -1,7 +1,7 @@
 import customtkinter as ctk
 import threading
 from gui_components import ValidatedNameInput, PathSelector, ChoiceSelector, CheckBoxButton, CustomWarningBox, \
-    ValidatedUrlField, LoadingPopup
+    ValidatedUrlField, LoadingPopup, DescriptionBox
 from project_orchestrator import ProjectOrchestrator
 import constants
 from gui_settings import SettingsManager
@@ -56,8 +56,8 @@ class AppGui(ctk.CTk):
 
     def setup_window(self):
         self.title('Python KickStarter')
-        width = 700
-        height = 600
+        width = 800
+        height = 700
 
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
@@ -87,16 +87,23 @@ class AppGui(ctk.CTk):
         self.clear_window()
         self.setup_header()
 
-        self.root_dir_selector.grid(row=2, column=0, sticky='ew', padx=50, pady=(20, 20))
-        self.name_section.grid(row=3, column=0, sticky='ew', padx=50, pady=(0, 10))
-        self.project_type_selector.grid(row=4, column=0, sticky='ew', padx=50, pady=(20, 20))
+        self.root_dir_selector.grid(row=2, column=0, sticky='ew', padx=50, pady=(20, 10))
+        self.project_type_selector.grid(row=3, column=0, sticky='ew', padx=50, pady=(0, 10))
+        # project description
+        self.description_field = DescriptionBox(self.main_container,theme_color=MAIN_THEME_PURPLE,hover_color=DEEP_PURPLE,max_chars=350)
+        self.description_field.grid(row=4, column=0, sticky='ew', padx=50, pady=(0, 10))
+        self.name_section.grid(row=5, column=0, sticky='ew', padx=50, pady=(20, 20))
+        # project name ai suggestions based on the descriptions
+        self.description_field.generate_button.configure(command=self.ai_suggestion_btn.generate)
+
+
 
         self.next_btn = ctk.CTkButton(self.main_container, text="Continue",
                                       command=self.validate_window_one,
                                       fg_color=MAIN_THEME_PURPLE, hover_color=DEEP_PURPLE,
                                       height=45,
                                       font=('helvetica', 17, 'bold'))
-        self.next_btn.grid(row=5, column=0, pady=30, padx=50)
+        self.next_btn.grid(row=6, column=0, pady=30, padx=50)
 
     def validate_window_one(self):
         current_name = self.name_section.name_var.get().strip()
