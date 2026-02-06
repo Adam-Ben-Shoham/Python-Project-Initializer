@@ -92,9 +92,13 @@ class AppGui(ctk.CTk):
         # project description
         self.description_field = DescriptionBox(self.main_container,theme_color=MAIN_THEME_PURPLE,hover_color=DEEP_PURPLE,max_chars=350)
         self.description_field.grid(row=4, column=0, sticky='ew', padx=50, pady=(0, 10))
-        self.name_section.grid(row=5, column=0, sticky='ew', padx=50, pady=(20, 20))
+        self.generate_button = ctk.CTkButton(self.main_container, fg_color=MAIN_THEME_PURPLE,
+                                             hover_color=DEEP_PURPLE,
+                                             text="Generate Name Suggestions",
+                                             width=30).grid(row=5, column=0, sticky='w',padx=50, pady=(0, 10))
+        self.name_section.grid(row=6, column=0, sticky='ew', padx=50, pady=(20, 20))
         # project name ai suggestions based on the descriptions
-        self.description_field.generate_button.configure(command=self.ai_suggestion_btn.generate)
+        # self.description_field.generate_button.configure(command=self.ai_suggestion_btn.generate)
 
 
 
@@ -103,7 +107,7 @@ class AppGui(ctk.CTk):
                                       fg_color=MAIN_THEME_PURPLE, hover_color=DEEP_PURPLE,
                                       height=45,
                                       font=('helvetica', 17, 'bold'))
-        self.next_btn.grid(row=6, column=0, pady=30, padx=50)
+        self.next_btn.grid(row=7, column=0, pady=30, padx=50)
 
     def validate_window_one(self):
         current_name = self.name_section.name_var.get().strip()

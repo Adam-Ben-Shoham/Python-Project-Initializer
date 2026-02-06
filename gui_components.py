@@ -449,12 +449,6 @@ class DescriptionBox(ctk.CTkFrame):
         self.description_entry.grid(row=1, column=0, sticky='ew', pady=(10, 5))
 
 
-        self.generate_button= ctk.CTkButton(self,fg_color=self.theme_color,
-                                            hover_color=self.hover_color,
-                                            text="Generate Names",
-                                            width=30)
-        self.generate_button.grid(row=2, column=0, sticky='w', pady=(5, 5))
-
     def update_counter(self,event=None):
 
         content = self.description_entry.get("0.0", "end-1c")
